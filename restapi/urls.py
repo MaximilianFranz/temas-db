@@ -16,7 +16,7 @@ urlpatterns = [
     url(r'^courses/$', views.CourseList.as_view()),
     url(r'^courses/(?P<pk>[0-9]+)/$', views.CourseDetail.as_view()),
     url(r'^departments/$', views.DepartmentList.as_view(), name='department-list'),
-    url(r'^departments/(?P<pk>[0-9]+)/$', views.DepartmentList.as_view(), name='department-detail'),
+    url(r'^departments/(?P<pk>[0-9]+)/$', views.DepartmentDetail.as_view(), name='department-detail'),
     url(r'^subscriptions/$', views.SubscriptionList.as_view()),
     url(r'^subscriptions/(?P<pk>[0-9]+)/$', views.SubscriptionDetail.as_view()),
     url(r'^payments/$', views.PaymentDetail.as_view()),

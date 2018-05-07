@@ -17,12 +17,12 @@ class Member(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     address = models.CharField(max_length=400)
-    birthday = models.DateField()
+    birthday = models.DateField(default=datetime.date.today)
     mail = models.EmailField(default="")
     phone = models.CharField(max_length=20)
     mailNotification = models.BooleanField(default=False)
     #photo = models.ImageField()
-    id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='member')
+    id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='member', blank=True, null=True)
 
     def __str__(self):
         return self.first_name + " " + self.last_name
