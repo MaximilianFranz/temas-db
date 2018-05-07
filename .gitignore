@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#ignore django local database
+db.sqlite3
+
+#ignore PyCharm IDEA
+.idea/
+
 # C extensions
 *.so
 
