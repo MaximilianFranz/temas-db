@@ -5,6 +5,7 @@ __pycache__/
 
 #ignore django local database
 db.sqlite3
+restapi/migrations
 
 #ignore PyCharm IDEA
 .idea/
