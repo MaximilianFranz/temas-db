@@ -2,14 +2,18 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from restapi.models import Member, IDCard, SpecificDate, Supervisor
 from restapi.models import Department, EventType, Course, Subscription, Payment
+
 import collections
+
+# import settings for global constants
+from temas_db import settings
 
 
 class IDCardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IDCard
-        fields = ('id', 'card_id', 'registered', 'member')
+        fields = ('id', 'card_id', 'registered', 'member', 'supervisor')
 
 
 
@@ -74,17 +78,19 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
 class SupervisorSerializer(serializers.ModelSerializer):
 
+    birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
+
     class Meta:
         model = Supervisor
 
-        fields = ('first_name' , 'last_name', 'address', 'birthday', 'department', 'course', 'id_card')
+        fields = ('id', 'first_name', 'last_name', 'address', 'birthday', 'department', 'courses', 'id_card')
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Department
-        fields = ('id','name', 'course', 'supervisor')
+        fields = ('id', 'name', 'courses', 'supervisors')
 
 
 class EventTypeSerializer(serializers.ModelSerializer):

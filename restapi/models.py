@@ -50,8 +50,9 @@ class Supervisor(models.Model):
     last_name = models.CharField(max_length=50)
     address = models.CharField(max_length=400)
     birthday = models.DateField(default=datetime.date.today)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisor')
-    id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='supervisor')
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors') # multiple per Dep
+    id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='supervisor') # one per idcard
+
     #user = models.OneToOneField(User, related_name="supervisor", on_delete=models.CASCADE)
     # TODO: Create User model for authentication together with Supervisor
     # TODO: Banking information
@@ -70,14 +71,15 @@ class Course(models.Model):
 
     name = models.CharField(max_length=50)
     day_of_week = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
-    supervisor = models.ForeignKey(Supervisor, on_delete=models.CASCADE, related_name='course')
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='course')
+    supervisor = models.ForeignKey(Supervisor, on_delete=models.CASCADE, related_name='courses', blank=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True)
 
 
 
 class SpecificDate(models.Model):
 
     #TODO: What implications has unique_for_date ??? Can only be one instance of SpecificDate be created on any given date?
+
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None)
