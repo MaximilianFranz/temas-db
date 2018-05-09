@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from restapi.models import Member, IDCard, SpecificDate, Supervisor
+from restapi.models import Member, IDCard, SpecificDate, Supervisor, Attendance
 from restapi.models import Department, EventType, Course, Subscription, Payment
 
 import collections
@@ -9,12 +9,8 @@ import collections
 from temas_db import settings
 
 
-class IDCardSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = IDCard
-        fields = ('id', 'card_id', 'registered', 'member', 'supervisor')
-
+# TODO: Make automatically created fields like 'created' or 'registered' to read_only
 
 
 class MemberField(serializers.PrimaryKeyRelatedField):
@@ -39,9 +35,9 @@ class MemberField(serializers.PrimaryKeyRelatedField):
 
 class MemberSerializer(serializers.ModelSerializer):
 
-    # TODO: How to add IDCard to a member upon creation --> Overwrite create / perform_create to cast PK into the actual object.
+
     id_card = serializers.PrimaryKeyRelatedField(many=False, queryset=IDCard.objects.all())
-    #id_card = IDCardSerializer(many=False)
+    birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
 
     #attended_dates = serializers.PrimaryKeyRelatedField(source=SpecificDate, queryset=SpecificDate.objects.all())
 
@@ -62,9 +58,24 @@ class MemberSerializer(serializers.ModelSerializer):
                   'attended_dates',)
 
 
+class IDCardSerializer(serializers.ModelSerializer):
+
+    # These are required as the fields are reverse and cannot be made 'blank' in models.py
+    member = MemberField(queryset=Supervisor.objects.all(), allow_empty=True, allow_null=True)
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all(), allow_empty=True, allow_null=True)
+
+    class Meta:
+        model = IDCard
+        fields = ('id', 'card_id', 'registered', 'member', 'supervisor')
+
+
 class SpecificDateSerializer(serializers.ModelSerializer):
 
+    #TODO: Replace MemberField with something that automatically creates the transitionary class
+    # 'Attendance' from given primary keys of members --> How to handle the status?
     attendees = MemberField(queryset=Member.objects.all(), many=True)
+    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all(), many=True)
 
     class Meta:
         depth = 2
@@ -73,7 +84,10 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         # Add 'id' field to provide for automatic id generation and adressing
         fields = ('id',
                   'date',
-                  'attendees')
+                  'attendees',
+                  'course',
+                  'supervisor')
+
 
 
 class SupervisorSerializer(serializers.ModelSerializer):
@@ -85,6 +99,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
 
         fields = ('id', 'first_name', 'last_name', 'address', 'birthday', 'department', 'courses', 'id_card')
 
+    # TODO: Overwrite validate to make sure ID-Card only has either on Member or one Supervisor assigned (bad solution)
 
 class DepartmentSerializer(serializers.ModelSerializer):
 
@@ -101,6 +116,9 @@ class EventTypeSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all(), allow_empty=True, allow_null=True)
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
 
     class Meta:
         model = Course
@@ -120,4 +138,8 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('member', 'course', 'date', 'value')
 
+class AttendanceSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = Attendance
+        fields = ('member', 'date', 'status', 'note')
