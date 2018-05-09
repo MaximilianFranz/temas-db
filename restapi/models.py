@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 import datetime
 # Create your models here
 
+# TODO: move all static Sets somewhere with explanation
+
+# TODO: Explain need of blank=True and null=True.
 
 class IDCard(models.Model):
 
@@ -13,7 +16,7 @@ class IDCard(models.Model):
 
 class Member(models.Model):
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateField(auto_now_add=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     address = models.CharField(max_length=400)
@@ -50,7 +53,7 @@ class Supervisor(models.Model):
     last_name = models.CharField(max_length=50)
     address = models.CharField(max_length=400)
     birthday = models.DateField(default=datetime.date.today)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors') # multiple per Dep
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
     id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='supervisor') # one per idcard
 
     #user = models.OneToOneField(User, related_name="supervisor", on_delete=models.CASCADE)
@@ -71,8 +74,14 @@ class Course(models.Model):
 
     name = models.CharField(max_length=50)
     day_of_week = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
-    supervisor = models.ForeignKey(Supervisor, on_delete=models.CASCADE, related_name='courses', blank=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True)
+    supervisor = models.ForeignKey(Supervisor, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+
+
+ATTENDANCE_STATUS = ((0, 'not specified'),
+                     (1, 'excused'),
+                     (2, 'attended'),
+                     (3, 'excused'))
 
 
 
@@ -81,7 +90,7 @@ class SpecificDate(models.Model):
     #TODO: What implications has unique_for_date ??? Can only be one instance of SpecificDate be created on any given date?
 
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
-    attendees = models.ManyToManyField(Member, related_name='attended_dates')
+    attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None)
     supervisor = models.ManyToManyField(Supervisor)
 
@@ -89,6 +98,14 @@ class SpecificDate(models.Model):
     # DEBUG Representation
     def __str__(self):
         return "Specific date at " + str(self.date)
+
+
+class Attendance(models.Model):
+
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, blank=False)
+    date = models.ForeignKey(SpecificDate, on_delete=models.CASCADE, blank=False)
+    status = models.PositiveSmallIntegerField(choices=ATTENDANCE_STATUS, blank=False)
+    note = models.TextField(blank=True, default=None)
 
 
 class Subscription(models.Model):
