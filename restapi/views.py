@@ -1,9 +1,11 @@
 from rest_framework import mixins, generics
+from rest_framework import permissions
 
 #TODO: Sort and structure imports
 
-from restapi.models import Member, SpecificDate, Supervisor, Course, EventType, Payment, Subscription, IDCard, Department
-from restapi.serializer import MemberSerializer, SpecificDateSerializer, IDCardSerializer, SubscriptionSerializer
+from restapi.models import Member, SpecificDate, Supervisor, Course, EventType, Payment
+from restapi.models import Attendance, Subscription, IDCard, Department
+from restapi.serializer import MemberSerializer, SpecificDateSerializer, IDCardSerializer, SubscriptionSerializer, AttendanceSerializer
 from restapi.serializer import EventTypeSerializer, PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer
 
 # Create your views here.
@@ -19,7 +21,7 @@ class MemberList(generics.ListCreateAPIView):
     serializer_class = MemberSerializer
 
 
-
+# TODO: Bundle Views into ViewSets where applicable
 
 class MemberDetail(generics.RetrieveUpdateDestroyAPIView):
 
@@ -59,6 +61,8 @@ class DepartmentList(generics.ListCreateAPIView):
 
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
+
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class DepartmentDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -118,7 +122,22 @@ class IDCardList(generics.ListCreateAPIView):
     queryset = IDCard.objects.all()
     serializer_class = IDCardSerializer
 
+    def perform_create(self, serializer):
+        print('got here')
+        serializer.save(member=None, supervisor=None)
 
 class IDCardDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = IDCard.objects.all()
     serializer_class = IDCardSerializer
+
+
+####----------------------------------------------
+
+class AttendanceList(generics.ListCreateAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+
+
+class AttendanceDetails(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
