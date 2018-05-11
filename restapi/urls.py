@@ -24,8 +24,8 @@ urlpatterns = [
     url(r'^payments/(?P<pk>[0-9]+)/$', views.PaymentDetail.as_view(), name='payment-detail'),
     url(r'^idcards/$', views.IDCardList.as_view(), name='idcard-list'),
     url(r'^idcards/(?P<pk>[0-9]+)/$', views.IDCardDetail.as_view(), name='idcard-detail'),
-    url(r'^attendance/$', views.IDCardList.as_view(), name='attendance-list'),
-    url(r'^attendance/(?P<pk>[0-9]+)/$', views.IDCardDetail.as_view(), name='attendance-detail')
+    url(r'^attendance/$', views.AttendanceList.as_view(), name='attendance-list'),
+    url(r'^attendance/(?P<pk>[0-9]+)/$', views.AttendanceDetails.as_view(), name='attendance-detail')
 ]
 
 # This allows to use multiple formats together with the generic 'Response' used in class based views

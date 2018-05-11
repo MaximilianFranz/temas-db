@@ -97,7 +97,7 @@ class SpecificDate(models.Model):
 
     # DEBUG Representation
     def __str__(self):
-        return "Specific date at " + str(self.date)
+        return self.course.name + " am " + str(self.date)
 
 
 class Attendance(models.Model):
