@@ -2,6 +2,7 @@ from django.conf.urls import url
 from restapi import views
 
 from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.authtoken import views as rest_framework_views
 
 # TODO: Replace pattern matching with django short cuts for that
 
@@ -25,7 +26,11 @@ urlpatterns = [
     url(r'^idcards/$', views.IDCardList.as_view(), name='idcard-list'),
     url(r'^idcards/(?P<pk>[0-9]+)/$', views.IDCardDetail.as_view(), name='idcard-detail'),
     url(r'^attendance/$', views.AttendanceList.as_view(), name='attendance-list'),
-    url(r'^attendance/(?P<pk>[0-9]+)/$', views.AttendanceDetails.as_view(), name='attendance-detail')
+    url(r'^attendance/(?P<pk>[0-9]+)/$', views.AttendanceDetails.as_view(), name='attendance-detail'),
+    url(r'^users/$', views.UserList.as_view(), name='user-list'),
+    url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name='user-detail'),
+
+    url(r'^get_auth/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
 ]
 
 # This allows to use multiple formats together with the generic 'Response' used in class based views

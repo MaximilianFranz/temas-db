@@ -1,11 +1,21 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from rest_framework.authtoken.models import Token
+from temas_db import settings
+
 import datetime
-# Create your models here
 
 # TODO: move all static Sets somewhere with explanation
 
 # TODO: Explain need of blank=True and null=True.
+
+@receiver(post_save, sender=User)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 class IDCard(models.Model):
 
@@ -30,10 +40,6 @@ class Member(models.Model):
     def __str__(self):
         return self.first_name + " " + self.last_name
 
-   # def save(self, force_insert=False, force_update=False, using=None,
-    #         update_fields=None):
-    #    self.id_card.member = self
-
 
 class Department(models.Model):
 
@@ -47,7 +53,7 @@ class EventType(models.Model):
     has_subscription = models.BooleanField(default=True)
 
 
-class Supervisor(models.Model):
+class SupervisorProfile(models.Model):
 
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -56,7 +62,8 @@ class Supervisor(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
     id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='supervisor') # one per idcard
 
-    #user = models.OneToOneField(User, related_name="supervisor", on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, related_name='supervisor_profile')
+
     # TODO: Create User model for authentication together with Supervisor
     # TODO: Banking information
 
@@ -74,7 +81,7 @@ class Course(models.Model):
 
     name = models.CharField(max_length=50)
     day_of_week = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
-    supervisor = models.ForeignKey(Supervisor, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
 
 
@@ -92,7 +99,7 @@ class SpecificDate(models.Model):
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None)
-    supervisor = models.ManyToManyField(Supervisor)
+    supervisor = models.ManyToManyField(SupervisorProfile)
 
 
     # DEBUG Representation

@@ -1,12 +1,14 @@
-from rest_framework import mixins, generics
+from rest_framework import mixins, generics, viewsets
 from rest_framework import permissions
+
+from django.contrib.auth.models import User
 
 #TODO: Sort and structure imports
 
-from restapi.models import Member, SpecificDate, Supervisor, Course, EventType, Payment
+from restapi.models import Member, SpecificDate, SupervisorProfile, Course, EventType, Payment
 from restapi.models import Attendance, Subscription, IDCard, Department
 from restapi.serializer import MemberSerializer, SpecificDateSerializer, IDCardSerializer, SubscriptionSerializer, AttendanceSerializer
-from restapi.serializer import EventTypeSerializer, PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer
+from restapi.serializer import EventTypeSerializer, PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer, UserSerializer
 
 # Create your views here.
 
@@ -45,15 +47,24 @@ class SpecificDateDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class SupervisorList(generics.ListCreateAPIView):
 
-    queryset = Supervisor.objects.all()
+    queryset = SupervisorProfile.objects.all()
     serializer_class = SupervisorSerializer
 
 
 class SupervisorDetail(generics.RetrieveUpdateDestroyAPIView):
 
-    queryset = Supervisor.objects.all()
+    queryset = SupervisorProfile.objects.all()
     serializer_class = SupervisorSerializer
 
+
+class UserList(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 ####----------------------------------------------
 

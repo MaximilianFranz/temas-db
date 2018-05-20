@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from restapi.models import Member, IDCard, SpecificDate, Supervisor, Attendance
+from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance
 from restapi.models import Department, EventType, Course, Subscription, Payment
 
 import collections
@@ -61,8 +61,8 @@ class MemberSerializer(serializers.ModelSerializer):
 class IDCardSerializer(serializers.ModelSerializer):
 
     # These are required as the fields are reverse and cannot be made 'blank' in models.py
-    member = MemberField(queryset=Supervisor.objects.all(), allow_empty=True, allow_null=True)
-    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all(), allow_empty=True, allow_null=True)
+    member = MemberField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
 
     class Meta:
         model = IDCard
@@ -75,7 +75,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
     # 'Attendance' from given primary keys of members --> How to handle the status?
     attendees = MemberField(queryset=Member.objects.all(), many=True)
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all(), many=True)
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True)
 
     class Meta:
         depth = 2
@@ -90,16 +90,63 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
 
 
+
 class SupervisorSerializer(serializers.ModelSerializer):
 
+    # TODO: Make the CREATE call only accessible with admin permissions
+
     birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
+    #required user fields
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    password = serializers.CharField(source='user.password', write_only=True)
 
     class Meta:
-        model = Supervisor
+        model = SupervisorProfile
 
-        fields = ('id', 'first_name', 'last_name', 'address', 'birthday', 'department', 'courses', 'id_card')
+        fields = ('id','first_name','last_name', 'address', 'birthday', 'department',
+                  'courses', 'id_card','username', 'email', 'password')
+        related_fields = ['user']
 
-    # TODO: Overwrite validate to make sure ID-Card only has either on Member or one Supervisor assigned (bad solution)
+    def update(self, instance, validated_data):
+        super(SupervisorSerializer, self).update(instance, validated_data)
+        instance.user.set_password(validated_data.get('user',{}).get('password'))
+        instance.user.email = validated_data.get('user', {}).get('email')
+        instance.user.username = validated_data.get('user', {}).get('username')
+        instance.save()
+
+    def create(self, validated_data):
+        kwargs = {'email' : validated_data['user'].pop('email'),
+                  'username' : validated_data['user'].pop('username'),}
+        user = User.objects.create(**kwargs)
+
+        # Password must be hashed and ought not be stored raw, thus use .set_password
+        user.set_password(validated_data['user'].pop('password'))
+        user.save()
+        validated_data['user'] = user
+
+        supervisor = super(SupervisorSerializer, self).create(validated_data)
+        return supervisor
+
+
+        # TODO: Overwrite validate to make sure ID-Card only has either on Member or one Supervisor assigned (bad solution)
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    """
+    Custom User serializer to support all fields in supervisor profile natively
+    """
+
+    address = serializers.CharField(source='supervisor_profile.address')
+
+    class Meta:
+        model = User
+        fields = ('password', 'first_name', 'last_name', 'email', 'address')
+        write_only_fields = ('password',)
+        read_only_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined',)
+
+
 
 class DepartmentSerializer(serializers.ModelSerializer):
 
@@ -117,7 +164,7 @@ class EventTypeSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
 
-    supervisor = serializers.PrimaryKeyRelatedField(queryset=Supervisor.objects.all(), allow_empty=True, allow_null=True)
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
     department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
 
     class Meta:
