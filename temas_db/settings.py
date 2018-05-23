@@ -31,6 +31,20 @@ ALLOWED_HOSTS = []
 
 DATE_INPUT_FORMATS = ['%d-%m-%Y', '%d-%m-%Y %H:%M']
 
+MONTH_NAMES = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'Juli',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+]
 
 # Application definition
 
@@ -48,14 +62,14 @@ INSTALLED_APPS = [
 
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    )
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework.authentication.TokenAuthentication',
+#     ),
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     )
+# }
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

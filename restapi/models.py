@@ -117,9 +117,9 @@ class Attendance(models.Model):
 
 class Subscription(models.Model):
 
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='subscriptions')
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    month = models.DateTimeField(unique_for_month=True)
+    month = models.DateField()
     value = models.FloatField()
 
 

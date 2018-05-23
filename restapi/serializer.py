@@ -1,12 +1,15 @@
 from rest_framework import serializers
+from rest_framework.validators import  UniqueForMonthValidator
 from django.contrib.auth.models import User
 from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance
 from restapi.models import Department, EventType, Course, Subscription, Payment
 
 import collections
+import datetime
 
 # import settings for global constants
 from temas_db import settings
+
 
 
 
@@ -167,16 +170,46 @@ class CourseSerializer(serializers.ModelSerializer):
     supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
     department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
 
+    # Lists full fledge member serialization of all members ignoring the subscription 'through-model'
+    members = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Course
-        fields = ('name', 'day_of_week', 'supervisor', 'department')
+        fields = ('name', 'day_of_week', 'supervisor', 'department', 'members')
+
+    def get_members(self, obj):
+        pass
+        # TODO: Add checking for current month
+        subscriptions = Subscription.objects.filter(course=obj.pk)\
+            .filter(month__ge=datetime.date.today()-datetime.timedelta(months=1))\
+            .filter(month__le=datetime.date.today()+datetime.timedelta(months=1))
+        members = Member.objects.filter(subscriptions__in=subscriptions)
+        serializer = MemberSerializer(members, many=True)
+        return serializer.data
+
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
 
+    month_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Subscription
-        fields = ('member', 'course', 'month', 'value')
+        fields = ('member', 'course', 'month', 'month_name' ,'value')
+
+    def get_month_name(self, obj):
+        month_name = settings.MONTH_NAMES[obj.month.month - 1]
+        return month_name
+
+
+    def validate(self, data):
+        existing = Subscription.objects.filter(member=data['member'])\
+                .filter(course=data['course'])\
+                .extra(where=['EXTRACT(MONTH FROM month) == 5']) #TODO rethink month validation and usage!
+        if len(existing) > 0:
+            raise serializers.ValidationError('Subscription for this month already exists')
+
+        return data
 
 
 class PaymentSerializer(serializers.ModelSerializer):
