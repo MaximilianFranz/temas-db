@@ -20,6 +20,7 @@ class MemberField(serializers.PrimaryKeyRelatedField):
     """
     Custom Field for Member in SpecificDate to allow nested representation and update by PK
     """
+
     def to_representation(self, value):
         pk = super(MemberField, self).to_representation(value)
         try:
@@ -38,14 +39,12 @@ class MemberField(serializers.PrimaryKeyRelatedField):
 
 class MemberSerializer(serializers.ModelSerializer):
 
-
     id_card = serializers.PrimaryKeyRelatedField(many=False, queryset=IDCard.objects.all())
     birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
 
     #attended_dates = serializers.PrimaryKeyRelatedField(source=SpecificDate, queryset=SpecificDate.objects.all())
 
     class Meta:
-        depth = 2
         model = Member
         # Add id field to provide for automatic id generation an adressing
         fields = ('id',
@@ -59,6 +58,14 @@ class MemberSerializer(serializers.ModelSerializer):
                   'mailNotification',
                   'id_card',
                   'attended_dates',)
+
+    def validate(self, data):
+        idcard = data['id_card']
+
+        if idcard.member is not None:
+            raise serializers.ValidationError('ID Card must be unique for members and supervisors')
+
+        return data
 
 
 class IDCardSerializer(serializers.ModelSerializer):
@@ -74,14 +81,13 @@ class IDCardSerializer(serializers.ModelSerializer):
 
 class SpecificDateSerializer(serializers.ModelSerializer):
 
-    #TODO: Replace MemberField with something that automatically creates the transitionary class
-    # 'Attendance' from given primary keys of members --> How to handle the status?
-    attendees = MemberField(queryset=Member.objects.all(), many=True)
+    attendees = MemberField(many=True, read_only=True)
+
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True)
 
     class Meta:
-        depth = 2
+        depth = 0
         model = SpecificDate
 
         # Add 'id' field to provide for automatic id generation and adressing
@@ -131,9 +137,13 @@ class SupervisorSerializer(serializers.ModelSerializer):
         supervisor = super(SupervisorSerializer, self).create(validated_data)
         return supervisor
 
+    def validate(self, data):
+        idcard = data['id_card']
 
-        # TODO: Overwrite validate to make sure ID-Card only has either on Member or one Supervisor assigned (bad solution)
+        if idcard.member is not None:
+            raise serializers.ValidationError('ID Card must be unique for members and supervisors')
 
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -171,6 +181,7 @@ class CourseSerializer(serializers.ModelSerializer):
     department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
 
     # Lists full fledge member serialization of all members ignoring the subscription 'through-model'
+    # For low-prio mode courses there is no subcription and thus no members to be listed.
     members = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -178,15 +189,13 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = ('name', 'day_of_week', 'supervisor', 'department', 'members')
 
     def get_members(self, obj):
-        pass
         # TODO: Add checking for current month
         subscriptions = Subscription.objects.filter(course=obj.pk)\
-            .filter(month__ge=datetime.date.today()-datetime.timedelta(months=1))\
-            .filter(month__le=datetime.date.today()+datetime.timedelta(months=1))
+            .filter(month__gte=datetime.date.today()-datetime.timedelta(days=30))\
+            .filter(month__lte=datetime.date.today()+datetime.timedelta(days=30))
         members = Member.objects.filter(subscriptions__in=subscriptions)
         serializer = MemberSerializer(members, many=True)
         return serializer.data
-
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -201,13 +210,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         month_name = settings.MONTH_NAMES[obj.month.month - 1]
         return month_name
 
+    def get_first_of_month(self, date):
+        return date - datetime.timedelta(date.day)
 
     def validate(self, data):
-        existing = Subscription.objects.filter(member=data['member'])\
-                .filter(course=data['course'])\
-                .extra(where=['EXTRACT(MONTH FROM month) == 5']) #TODO rethink month validation and usage!
+        date = data['month']
+        existing = Subscription.objects.filter(member=data['member']).filter(course=data['course'])\
+            .filter(month__year=date.year).filter(month__month=date.month)
+
         if len(existing) > 0:
-            raise serializers.ValidationError('Subscription for this month already exists')
+            raise serializers.ValidationError("Only one Subscription per month and user and course is possible")
 
         return data
 
@@ -218,8 +230,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('member', 'course', 'date', 'value')
 
+
 class AttendanceSerializer(serializers.ModelSerializer):
+
+    member = MemberField(many=False, read_only=True)
 
     class Meta:
         model = Attendance
         fields = ('member', 'date', 'status', 'note')
+

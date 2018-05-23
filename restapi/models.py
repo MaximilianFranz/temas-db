@@ -8,6 +8,8 @@ from temas_db import settings
 
 import datetime
 
+
+
 # TODO: move all static Sets somewhere with explanation
 
 # TODO: Explain need of blank=True and null=True.
@@ -85,16 +87,7 @@ class Course(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
 
 
-ATTENDANCE_STATUS = ((0, 'not specified'),
-                     (1, 'excused'),
-                     (2, 'attended'),
-                     (3, 'excused'))
-
-
-
 class SpecificDate(models.Model):
-
-    #TODO: What implications has unique_for_date ??? Can only be one instance of SpecificDate be created on any given date?
 
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
@@ -105,6 +98,12 @@ class SpecificDate(models.Model):
     # DEBUG Representation
     def __str__(self):
         return self.course.name + " am " + str(self.date)
+
+
+ATTENDANCE_STATUS = ((0, 'not specified'),
+                     (1, 'excused'),
+                     (2, 'attended'),
+                     (3, 'excused'))
 
 
 class Attendance(models.Model):
