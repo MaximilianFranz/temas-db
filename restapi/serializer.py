@@ -62,7 +62,7 @@ class MemberSerializer(serializers.ModelSerializer):
     def validate(self, data):
         idcard = data['id_card']
 
-        if idcard.member is not None:
+        if idcard.supervisor is not None:
             raise serializers.ValidationError('ID Card must be unique for members and supervisors')
 
         return data
@@ -95,8 +95,33 @@ class SpecificDateSerializer(serializers.ModelSerializer):
                   'date',
                   'attendees',
                   'course',
-                  'supervisor')
+                  'supervisor',
+                  'start_time',
+                  'end_time')
 
+    def validate(self, data):
+        """
+        Ensures that only one instance of course exists for every specific date.
+        :param data: passed with the POST request
+        :return: validated data or raises ValidationError
+        """
+        try:
+            date = data['date']
+            if len(SpecificDate.objects.all().filter(date=date).filter(course=data['course'])) > 0:
+                raise serializers.ValidationError("There can only be one instance of a course per specific date")
+        except:
+            if len(SpecificDate.objects.all().filter(date=datetime.date.today()).filter(course=data['course'])) > 0:
+                raise serializers.ValidationError("There is already an instance of this course for today")
+
+        return data
+
+    def create(self, validated_data):
+        if validated_data['start_time'] is None or validated_data['end_time'] is None:
+            validated_data['start_time'] = validated_data['course'].start_time
+            validated_data['end_time'] = validated_data['course'].end_time
+
+        specific_date = super(SpecificDateSerializer, self).create(validated_data)
+        return specific_date
 
 
 
@@ -172,13 +197,18 @@ class EventTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventType
-        fields = ('id', 'name', 'has_prio', 'has_payment', 'has_subscription')
+        fields = ('id', 'name', 'has_prio', 'has_payment', 'has_subscription', 'courses')
 
 
 class CourseSerializer(serializers.ModelSerializer):
 
-    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
-    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
+    # supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
+    # department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
+
+
+    # supervisor = SupervisorSerializer()
+    # department = DepartmentSerializer()
+
 
     # Lists full fledge member serialization of all members ignoring the subscription 'through-model'
     # For low-prio mode courses there is no subcription and thus no members to be listed.
@@ -186,7 +216,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('name', 'day_of_week', 'supervisor', 'department', 'members')
+        fields = ('id','name', 'day_of_week', 'supervisor', 'department', 'members', 'start_time', 'end_time' )
 
     def get_members(self, obj):
         # TODO: Add checking for current month
