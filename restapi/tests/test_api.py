@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase
-from restapi.models import Department, IDCard, Supervisor
+from restapi.models import Department, IDCard, SupervisorProfile
 from restapi.views import DepartmentList
 
 # Create your tests here.

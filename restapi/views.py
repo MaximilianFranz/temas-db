@@ -1,4 +1,6 @@
 from rest_framework import mixins, generics, viewsets
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import permissions
 
 from django.contrib.auth.models import User
@@ -73,7 +75,7 @@ class DepartmentList(generics.ListCreateAPIView):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
 
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
 
 class DepartmentDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -152,3 +154,16 @@ class AttendanceList(generics.ListCreateAPIView):
 class AttendanceDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
+
+
+####-------------------------------------------------
+# Special, functional fiews
+####-------------------------------------------------
+
+class CourseDatesList(APIView):
+
+    def get(self, request, course_pk, format=None):
+
+        dates = SpecificDate.objects.all().filter(course=course_pk)
+        serializer = SpecificDateSerializer(dates, many=True)
+        return Response(serializer.data)
