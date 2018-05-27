@@ -85,6 +85,11 @@ class Course(models.Model):
     day_of_week = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
     supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+    eventtype = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+
+    # TODO : Refactor default times clean!
+    start_time = models.TimeField(default=datetime.time(16,00,00))
+    end_time = models.TimeField(default=datetime.time(17,30,00))
 
 
 class SpecificDate(models.Model):
@@ -94,6 +99,8 @@ class SpecificDate(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None)
     supervisor = models.ManyToManyField(SupervisorProfile)
 
+    start_time = models.TimeField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
 
     # DEBUG Representation
     def __str__(self):
