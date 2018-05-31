@@ -79,9 +79,20 @@ class IDCardSerializer(serializers.ModelSerializer):
         fields = ('id', 'card_id', 'registered', 'member', 'supervisor')
 
 
+class AttendanceSerializer(serializers.ModelSerializer):
+
+    member = MemberField(many=False, read_only=True)
+    # member = serializers.ReadOnlyField(source="member.first_name")
+    # date = serializers.ReadOnlyField(source="date.date")
+
+    class Meta:
+        model = Attendance
+        fields = ('member', 'date', 'status', 'note')
+
+
 class SpecificDateSerializer(serializers.ModelSerializer):
 
-    attendees = MemberField(many=True, read_only=True)
+    attendees = AttendanceSerializer(source="attendance_set", many=True, read_only=True)
 
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True)
@@ -101,6 +112,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
+        FEATURE: Allow only only subcription per course, per member and date
         Ensures that only one instance of course exists for every specific date.
         :param data: passed with the POST request
         :return: validated data or raises ValidationError
@@ -116,11 +128,19 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        #FEATURE : Use start and end time from corresponding course
         if validated_data['start_time'] is None or validated_data['end_time'] is None:
             validated_data['start_time'] = validated_data['course'].start_time
             validated_data['end_time'] = validated_data['course'].end_time
 
         specific_date = super(SpecificDateSerializer, self).create(validated_data)
+
+
+        # FEATURE: Auto add Attendees from corresponding course subcriptions, Calls RelatedManager and retrieves all
+        # from the current month
+        for subscription in validated_data['course'].subscriptions.all().filter(month__month=specific_date.date.month):
+            Attendance.objects.create(status=0, member=subscription.member, date=specific_date)
+
         return specific_date
 
 
@@ -221,8 +241,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_members(self, obj):
         # TODO: Add checking for current month
         subscriptions = Subscription.objects.filter(course=obj.pk)\
-            .filter(month__gte=datetime.date.today()-datetime.timedelta(days=30))\
-            .filter(month__lte=datetime.date.today()+datetime.timedelta(days=30))
+            .filter(month__month=datetime.date.today().month)
         members = Member.objects.filter(subscriptions__in=subscriptions)
         serializer = MemberSerializer(members, many=True)
         return serializer.data
@@ -260,12 +279,4 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('member', 'course', 'date', 'value')
 
-
-class AttendanceSerializer(serializers.ModelSerializer):
-
-    member = MemberField(many=False, read_only=True)
-
-    class Meta:
-        model = Attendance
-        fields = ('member', 'date', 'status', 'note')
 

@@ -118,13 +118,13 @@ class Attendance(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, blank=False)
     date = models.ForeignKey(SpecificDate, on_delete=models.CASCADE, blank=False)
     status = models.PositiveSmallIntegerField(choices=ATTENDANCE_STATUS, blank=False)
-    note = models.TextField(blank=True, default=None)
+    note = models.TextField(blank=True, null=True, default="")
 
 
 class Subscription(models.Model):
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='subscriptions')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
     month = models.DateField()
     value = models.FloatField()
 
