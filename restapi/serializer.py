@@ -81,13 +81,13 @@ class IDCardSerializer(serializers.ModelSerializer):
 
 class AttendanceSerializer(serializers.ModelSerializer):
 
-    member = MemberField(many=False, read_only=True)
+    member = MemberField(many=False, queryset=Member.objects.all())
     # member = serializers.ReadOnlyField(source="member.first_name")
     # date = serializers.ReadOnlyField(source="date.date")
 
     class Meta:
         model = Attendance
-        fields = ('member', 'date', 'status', 'note')
+        fields = ('id', 'member', 'date', 'status', 'note')
 
 
 class SpecificDateSerializer(serializers.ModelSerializer):

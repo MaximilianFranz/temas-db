@@ -110,7 +110,7 @@ class SpecificDate(models.Model):
 ATTENDANCE_STATUS = ((0, 'not specified'),
                      (1, 'excused'),
                      (2, 'attended'),
-                     (3, 'excused'))
+                     (3, 'not attended'))
 
 
 class Attendance(models.Model):
