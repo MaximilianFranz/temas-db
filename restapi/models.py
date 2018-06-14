@@ -42,6 +42,19 @@ class Member(models.Model):
     def __str__(self):
         return self.first_name + " " + self.last_name
 
+    @property
+    def balance(self):
+        payments = self.payments.all()
+        balance = 0
+        for payment in payments:
+            balance += payment.value
+
+        subcriptions = self.subscriptions.all()
+        for subcription in subcriptions:
+            balance -= subcription.value
+
+        return balance
+
 
 class Department(models.Model):
 
@@ -120,6 +133,9 @@ class Attendance(models.Model):
     status = models.PositiveSmallIntegerField(choices=ATTENDANCE_STATUS, blank=False)
     note = models.TextField(blank=True, null=True, default="")
 
+    class Meta:
+        unique_together = (('member', 'date'),)
+
 
 class Subscription(models.Model):
 
@@ -128,12 +144,14 @@ class Subscription(models.Model):
     month = models.DateField()
     value = models.FloatField()
 
+    class Meta:
+        unique_together = (('member', 'course', 'month'),)
 
 class Payment(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payments')
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    date = models.DateTimeField(default=datetime.date.today)
+    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, blank=True, null=True)
+    date = models.DateField(default=datetime.date.today)
     value = models.FloatField()
-
 
 

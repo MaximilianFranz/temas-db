@@ -3,7 +3,6 @@ from rest_framework.validators import  UniqueForMonthValidator
 from django.contrib.auth.models import User
 from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance
 from restapi.models import Department, EventType, Course, Subscription, Payment
-
 import collections
 import datetime
 
@@ -57,7 +56,8 @@ class MemberSerializer(serializers.ModelSerializer):
                   'birthday',
                   'mailNotification',
                   'id_card',
-                  'attended_dates',)
+                  'attended_dates',
+                  'balance')
 
     def validate(self, data):
         idcard = data['id_card']
@@ -66,6 +66,8 @@ class MemberSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('ID Card must be unique for members and supervisors')
 
         return data
+
+
 
 
 class IDCardSerializer(serializers.ModelSerializer):
@@ -200,7 +202,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('password', 'first_name', 'last_name', 'email', 'address')
+        fields = ('id', 'password', 'first_name', 'last_name', 'email', 'address')
         write_only_fields = ('password',)
         read_only_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined',)
 
@@ -253,7 +255,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('member', 'course', 'month', 'month_name' ,'value')
+        fields = ('id', 'member', 'course', 'month', 'month_name' ,'value')
 
     def get_month_name(self, obj):
         month_name = settings.MONTH_NAMES[obj.month.month - 1]
@@ -277,6 +279,6 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ('member', 'course', 'date', 'value')
+        fields = ('id', 'member', 'course', 'date', 'value')
 
 
