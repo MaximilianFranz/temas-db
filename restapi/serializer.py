@@ -252,10 +252,11 @@ class CourseSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
 
     month_name = serializers.SerializerMethodField()
+    month = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
 
     class Meta:
         model = Subscription
-        fields = ('id', 'member', 'course', 'month', 'month_name' ,'value')
+        fields = ('id', 'member', 'course', 'month', 'month_name', 'value')
 
     def get_month_name(self, obj):
         month_name = settings.MONTH_NAMES[obj.month.month - 1]
