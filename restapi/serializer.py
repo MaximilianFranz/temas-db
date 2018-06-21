@@ -41,8 +41,6 @@ class MemberSerializer(serializers.ModelSerializer):
     id_card = serializers.PrimaryKeyRelatedField(many=False, queryset=IDCard.objects.all())
     birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
 
-    #attended_dates = serializers.PrimaryKeyRelatedField(source=SpecificDate, queryset=SpecificDate.objects.all())
-
     class Meta:
         model = Member
         # Add id field to provide for automatic id generation an adressing
@@ -112,24 +110,14 @@ class SpecificDateSerializer(serializers.ModelSerializer):
                   'start_time',
                   'end_time')
 
-    def validate(self, data):
-        """
-        FEATURE: Allow only only subcription per course, per member and date
-        Ensures that only one instance of course exists for every specific date.
-        :param data: passed with the POST request
-        :return: validated data or raises ValidationError
-        """
-        try:
-            date = data['date']
-            if len(SpecificDate.objects.all().filter(date=date).filter(course=data['course'])) > 0:
-                raise serializers.ValidationError("There can only be one instance of a course per specific date")
-        except:
-            if len(SpecificDate.objects.all().filter(date=datetime.date.today()).filter(course=data['course'])) > 0:
-                raise serializers.ValidationError("There is already an instance of this course for today")
-
-        return data
-
     def create(self, validated_data):
+        """
+        FEATURE: Overrides create to ensure the SpecificDate instance inherits its details from the related course if not
+        specified differently. This applies to attendees, start- and end-times
+
+        :param validated_data:
+        :return: the full fledged instance of the SpecificDate model
+        """
         #FEATURE : Use start and end time from corresponding course
         if validated_data['start_time'] is None or validated_data['end_time'] is None:
             validated_data['start_time'] = validated_data['course'].start_time
@@ -164,7 +152,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
     # TODO: Make the CREATE call only accessible with admin permissions
 
     birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
-    #required user fields
+    # required user fields
     username = serializers.CharField(source='user.username')
     email = serializers.EmailField(source='user.email')
     password = serializers.CharField(source='user.password', write_only=True)
