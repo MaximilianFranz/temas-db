@@ -94,7 +94,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
 class SpecificDateSerializer(serializers.ModelSerializer):
 
-    attendees = AttendanceSerializer(source="attendance_set", many=True, read_only=True)
+    attendees = serializers.SerializerMethodField()
 
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True)
@@ -137,14 +137,26 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
         specific_date = super(SpecificDateSerializer, self).create(validated_data)
 
-
-        # FEATURE: Auto add Attendees from corresponding course subcriptions, Calls RelatedManager and retrieves all
-        # from the current month
         for subscription in validated_data['course'].subscriptions.all().filter(month__month=specific_date.date.month):
             Attendance.objects.create(status=0, member=subscription.member, date=specific_date)
 
         return specific_date
 
+    def get_attendees(self, obj):
+        """
+        Special serializer method field to ensure a SpecificDate always represents the attendees
+        based on the subscription to the related course
+
+        :param obj: the currently serialized instance
+        :return: the serialized data for the field attendees
+        """
+        for sub in obj.course.subscriptions.all().filter(month__month=obj.date.month):
+            Attendance.objects.get_or_create(member=sub.member, date=obj) # TODO: avoid returned two by ensuring data integrity
+
+        attendance_set = obj.attendance_set
+        serializer = AttendanceSerializer(attendance_set, many=True)
+
+        return serializer.data
 
 
 class SupervisorSerializer(serializers.ModelSerializer):
