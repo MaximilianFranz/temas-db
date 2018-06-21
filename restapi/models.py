@@ -119,6 +119,9 @@ class SpecificDate(models.Model):
     def __str__(self):
         return self.course.name + " am " + str(self.date)
 
+    class Meta:
+        unique_together = ('date', 'course')
+
 
 ATTENDANCE_STATUS = ((0, 'not specified'),
                      (1, 'excused'),
@@ -130,11 +133,13 @@ class Attendance(models.Model):
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE, blank=False)
     date = models.ForeignKey(SpecificDate, on_delete=models.CASCADE, blank=False)
-    status = models.PositiveSmallIntegerField(choices=ATTENDANCE_STATUS, blank=False)
+    status = models.PositiveSmallIntegerField(choices=ATTENDANCE_STATUS, blank=False, default=0)
     note = models.TextField(blank=True, null=True, default="")
 
     class Meta:
-        unique_together = (('member', 'date'),)
+        unique_together = ('member', 'date')
+
+
 
 
 class Subscription(models.Model):
