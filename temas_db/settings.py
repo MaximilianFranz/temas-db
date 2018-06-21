@@ -29,7 +29,7 @@ ALLOWED_HOSTS = []
 
 # MY SETTINGS:
 
-DATE_INPUT_FORMATS = ['%d-%m-%Y', '%d-%m-%Y %H:%M', '%Y-%d', '%d-%Y'] # Last two for month fields implicity set day to 1
+DATE_INPUT_FORMATS = ['%d-%m-%Y', '%d-%m-%Y %H:%M', '%Y-%m', '%m-%Y'] # Last two for month fields implicity set day to 1
 
 MONTH_NAMES = [
     'January',
