@@ -123,6 +123,9 @@ class SpecificDateSerializer(serializers.ModelSerializer):
             validated_data['start_time'] = validated_data['course'].start_time
             validated_data['end_time'] = validated_data['course'].end_time
 
+        if len(validated_data['supervisor']) == 0:
+            validated_data['supervisor'] = validated_data['course'].supervisor.all()
+
         specific_date = super(SpecificDateSerializer, self).create(validated_data)
 
         for subscription in validated_data['course'].subscriptions.all().filter(month__month=specific_date.date.month):
