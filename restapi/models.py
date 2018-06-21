@@ -96,7 +96,7 @@ class Course(models.Model):
 
     name = models.CharField(max_length=50)
     day_of_week = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
-    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+    supervisor = models.ManyToManyField(SupervisorProfile, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     eventtype = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
 
@@ -110,7 +110,7 @@ class SpecificDate(models.Model):
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None)
-    supervisor = models.ManyToManyField(SupervisorProfile)
+    supervisor = models.ManyToManyField(SupervisorProfile, blank=True, null=True)
 
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
