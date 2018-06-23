@@ -75,7 +75,6 @@ class SupervisorProfile(models.Model):
     address = models.CharField(max_length=400)
     birthday = models.DateField(default=datetime.date.today)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
-    id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='supervisor') # one per idcard
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, related_name='supervisor_profile')
 
