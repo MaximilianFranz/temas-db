@@ -82,13 +82,13 @@ class SupervisorProfile(models.Model):
     # TODO: Banking information
 
 
-DAYS_OF_WEEK = (('MON','Monday'),
-                ('TUE','Tuesday'),
-                ('WED', 'Wednesday'),
-                ('THU', 'Thursday'),
-                ('FRI', 'Friday'),
-                ('SAT', 'Saturday'),
-                ('SUN', 'Sunday')
+DAYS_OF_WEEK = ((0, 'Monday'),
+                (1,'Tuesday'),
+                (2, 'Wednesday'),
+                (3, 'Thursday'),
+                (4, 'Friday'),
+                (5, 'Saturday'),
+                (6, 'Sunday')
                 )
 
 class Course(models.Model):
