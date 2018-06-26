@@ -14,7 +14,6 @@ from temas_db import settings
 
 # TODO: Make automatically created fields like 'created' or 'registered' to read_only
 
-
 class MemberField(serializers.PrimaryKeyRelatedField):
     """
     Custom Field for Member in SpecificDate to allow nested representation and update by PK
@@ -36,9 +35,10 @@ class MemberField(serializers.PrimaryKeyRelatedField):
 
         return collections.OrderedDict([(item.id, str(item)) for item in queryset])
 
+
 class MemberSerializer(serializers.ModelSerializer):
 
-    id_card = serializers.PrimaryKeyRelatedField(many=False, queryset=IDCard.objects.all())
+    id_card = serializers.PrimaryKeyRelatedField(many=False, queryset=IDCard.objects.all(), required=False, allow_null=True)
     birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
 
     class Meta:
@@ -57,33 +57,20 @@ class MemberSerializer(serializers.ModelSerializer):
                   'attended_dates',
                   'balance')
 
-    def validate(self, data):
-        idcard = data['id_card']
-
-        if idcard.supervisor is not None:
-            raise serializers.ValidationError('ID Card must be unique for members and supervisors')
-
-        return data
-
-
-
 
 class IDCardSerializer(serializers.ModelSerializer):
 
     # These are required as the fields are reverse and cannot be made 'blank' in models.py
     member = MemberField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
-    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
 
     class Meta:
         model = IDCard
-        fields = ('id', 'card_id', 'registered', 'member', 'supervisor')
+        fields = ('id', 'card_id', 'registered', 'member')
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
 
     member = MemberField(many=False, queryset=Member.objects.all())
-    # member = serializers.ReadOnlyField(source="member.first_name")
-    # date = serializers.ReadOnlyField(source="date.date")
 
     class Meta:
         model = Attendance
@@ -95,7 +82,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
     attendees = serializers.SerializerMethodField()
 
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True)
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True, required=False)
 
     class Meta:
         depth = 0
@@ -118,7 +105,6 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         :param validated_data:
         :return: the full fledged instance of the SpecificDate model
         """
-        #FEATURE : Use start and end time from corresponding course
         if validated_data['start_time'] is None or validated_data['end_time'] is None:
             validated_data['start_time'] = validated_data['course'].start_time
             validated_data['end_time'] = validated_data['course'].end_time
@@ -164,7 +150,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
         model = SupervisorProfile
 
         fields = ('id','first_name','last_name', 'address', 'birthday', 'department',
-                  'courses', 'id_card','username', 'email', 'password')
+                  'courses', 'username', 'email', 'password')
         related_fields = ['user']
 
     def update(self, instance, validated_data):
