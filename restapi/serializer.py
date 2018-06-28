@@ -136,6 +136,28 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
+class SupervisorField(serializers.PrimaryKeyRelatedField):
+    """
+    Custom Field for Supervisor to allow nested representation and update by PK
+    """
+
+    def to_representation(self, value):
+        pk = super(SupervisorField, self).to_representation(value)
+        try:
+            item = SupervisorProfile.objects.get(pk=pk)
+            serializer = SupervisorSerializer(item)
+            return serializer.data
+        except SupervisorProfile.DoesNotExist:
+            return None
+
+    def get_choices(self, cutoff=None):
+        queryset = self.get_queryset()
+        if queryset is None:
+            return {}
+
+        return collections.OrderedDict([(item.id, str(item)) for item in queryset])
+
+
 class SupervisorSerializer(serializers.ModelSerializer):
 
     # TODO: Make the CREATE call only accessible with admin permissions
@@ -196,6 +218,27 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined',)
 
 
+class DepartmentField(serializers.PrimaryKeyRelatedField):
+    """
+    Custom Field for Department to allow nested representation and update by PK
+    """
+
+    def to_representation(self, value):
+        pk = super(DepartmentField, self).to_representation(value)
+        try:
+            item = Department.objects.get(pk=pk)
+            serializer = DepartmentSerializer(item)
+            return serializer.data
+        except Department.DoesNotExist:
+            return None
+
+    def get_choices(self, cutoff=None):
+        queryset = self.get_queryset()
+        if queryset is None:
+            return {}
+
+        return collections.OrderedDict([(item.id, str(item)) for item in queryset])
+
 
 class DepartmentSerializer(serializers.ModelSerializer):
 
@@ -213,13 +256,8 @@ class EventTypeSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
 
-    # supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
-    # department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), allow_empty=True, allow_null=True)
-
-
-    # supervisor = SupervisorSerializer()
-    # department = DepartmentSerializer()
-
+    supervisor = SupervisorField(queryset=SupervisorProfile.objects.all(), many=True)
+    department = DepartmentField(queryset=Department.objects.all())
 
     # Lists full fledge member serialization of all members ignoring the subscription 'through-model'
     # For low-prio mode courses there is no subcription and thus no members to be listed.
@@ -227,10 +265,9 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('id','name', 'day_of_week', 'supervisor', 'department', 'members', 'start_time', 'end_time' )
+        fields = ('id','name', 'day_of_week', 'supervisor', 'department', 'members', 'eventtype', 'start_time', 'end_time' )
 
     def get_members(self, obj):
-        # TODO: Add checking for current month
         subscriptions = Subscription.objects.filter(course=obj.pk)\
             .filter(month__month=datetime.date.today().month)
         members = Member.objects.filter(subscriptions__in=subscriptions)
