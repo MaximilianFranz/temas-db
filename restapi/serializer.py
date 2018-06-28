@@ -61,7 +61,7 @@ class MemberSerializer(serializers.ModelSerializer):
 class IDCardSerializer(serializers.ModelSerializer):
 
     # These are required as the fields are reverse and cannot be made 'blank' in models.py
-    member = MemberField(queryset=SupervisorProfile.objects.all(), allow_empty=True, allow_null=True)
+    member = MemberField(queryset=Member.objects.all(), allow_empty=True, allow_null=True)
 
     class Meta:
         model = IDCard
@@ -80,6 +80,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
 class SpecificDateSerializer(serializers.ModelSerializer):
 
     attendees = serializers.SerializerMethodField()
+    date = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
 
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     supervisor = serializers.PrimaryKeyRelatedField(queryset=SupervisorProfile.objects.all(), many=True, required=False)
