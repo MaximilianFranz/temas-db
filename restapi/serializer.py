@@ -207,14 +207,6 @@ class SupervisorSerializer(serializers.ModelSerializer):
         supervisor = super(SupervisorSerializer, self).create(validated_data)
         return supervisor
 
-    def validate(self, data):
-        idcard = data['id_card']
-
-        if idcard.member is not None:
-            raise serializers.ValidationError('ID Card must be unique for members and supervisors')
-
-        return data
-
 class UserSerializer(serializers.ModelSerializer):
 
     """
