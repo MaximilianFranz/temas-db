@@ -51,7 +51,8 @@ class Member(models.Model):
 
         subcriptions = self.subscriptions.all()
         for subcription in subcriptions:
-            balance -= subcription.value
+            if subcription.active:
+                balance -= subcription.accumulated_value
 
         return balance
 
@@ -164,20 +165,13 @@ class Subscription(models.Model):
             return True
 
     @property
-    def total_value(self):
-        if self.end_date is not None:
-            delta = self.end_date - self.start_date
-            return self.value * delta.days // 30
-        else:
-            return 0
-
-    @property
-    def current_value(self):
+    def accumulated_value(self):
         if self.active:
             delta = datetime.datetime.today().date() - self.start_date
             return self.value * (delta.days // 30)
         else:
-            return self.total_value
+            delta = self.end_date - self.start_date
+            return self.value * delta.days // 30
 
     class Meta:
         unique_together = (('member', 'course'),)

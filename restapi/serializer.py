@@ -291,7 +291,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ('course', 'member', 'start_date', 'end_date',
-                  'value', 'total_value', 'current_value', 'length', 'active')
+                  'value', 'accumulated_value', 'length', 'active')
 
 
 
