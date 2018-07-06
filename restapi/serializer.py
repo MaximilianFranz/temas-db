@@ -115,27 +115,38 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
         specific_date = super(SpecificDateSerializer, self).create(validated_data)
 
-        for subscription in validated_data['course'].subscriptions.all().filter(month__month=specific_date.date.month):
-            Attendance.objects.create(status=0, member=subscription.member, date=specific_date)
+        for subscription in validated_data['course'].subscriptions.all():
+            if subscription.active:
+                Attendance.objects.create(status=0, member=subscription.member, date=specific_date)
 
         return specific_date
 
     def get_attendees(self, obj):
         """
         Special serializer method field to ensure a SpecificDate always represents the attendees
-        based on the subscription to the related course
+        based on the active subscription to the related course
 
         :param obj: the currently serialized instance
         :return: the serialized data for the field attendees
         """
-        for sub in obj.course.subscriptions.all().filter(month__month=obj.date.month):
-            Attendance.objects.get_or_create(member=sub.member, date=obj) # TODO: avoid returned two by ensuring data integrity
+        for sub in obj.course.subscriptions.all():
+            if sub.active:
+                Attendance.objects.get_or_create(member=sub.member, date=obj)
 
         attendance_set = obj.attendance_set
         serializer = AttendanceSerializer(attendance_set, many=True)
 
         return serializer.data
 
+    def validate(self, data):
+        """
+        Making sure only dates related to the course dates (i.e weekday of the course) can be created
+
+        :param data:
+        :return:
+        """
+        if data['date'].weekday() != data['course'].day_of_week:
+            raise serializers.ValidationError('Date is not on the weekday of this course')
 
 class SupervisorField(serializers.PrimaryKeyRelatedField):
     """
@@ -269,38 +280,27 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = ('id','name', 'day_of_week', 'supervisor', 'department', 'members', 'eventtype', 'start_time', 'end_time' )
 
     def get_members(self, obj):
-        subscriptions = Subscription.objects.filter(course=obj.pk)\
-            .filter(month__month=datetime.date.today().month)
-        members = Member.objects.filter(subscriptions__in=subscriptions)
+        """
+
+        Returns current members of this course by querying active subscriptions and returning the related members
+        :param obj: the instance of this Course model
+        :return: serialized data for the field members
+
+        """
+        subscriptions = Subscription.objects.filter(course=obj.pk)
+        active_subscriptions = [sub for sub in subscriptions if sub.active] # filter out passive subscriptions
+        members = Member.objects.filter(subscriptions__in=active_subscriptions)
         serializer = MemberSerializer(members, many=True)
         return serializer.data
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
 
-    month_name = serializers.SerializerMethodField()
-    month = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
-
     class Meta:
         model = Subscription
-        fields = ('id', 'member', 'course', 'month', 'month_name', 'value')
+        fields = ('course', 'member', 'start_date', 'end_date',
+                  'value', 'total_value', 'current_value', 'length', 'active')
 
-    def get_month_name(self, obj):
-        month_name = settings.MONTH_NAMES[obj.month.month - 1]
-        return month_name
-
-    def get_first_of_month(self, date):
-        return date - datetime.timedelta(date.day)
-
-    def validate(self, data):
-        date = data['month']
-        existing = Subscription.objects.filter(member=data['member']).filter(course=data['course'])\
-            .filter(month__year=date.year).filter(month__month=date.month)
-
-        if len(existing) > 0:
-            raise serializers.ValidationError("Only one Subscription per month and user and course is possible")
-
-        return data
 
 
 class PaymentSerializer(serializers.ModelSerializer):

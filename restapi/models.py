@@ -139,17 +139,49 @@ class Attendance(models.Model):
         unique_together = ('member', 'date')
 
 
-
-
 class Subscription(models.Model):
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='subscriptions')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
-    month = models.DateField()
-    value = models.FloatField()
+    start_date = models.DateField(default=datetime.date.today)
+    end_date = models.DateField(null=True, blank=True)
+    value = models.FloatField() # monthly value of this
+
+    @property
+    def length(self):
+        if self.end_date is not None:
+            delta = self.end_date - self.start_date
+            return delta.days // 30
+
+        else:
+            return 'unlimited'
+
+    @property
+    def active(self):
+        if self.end_date is not None:
+            return self.end_date > datetime.datetime.today().date()
+        else:
+            return True
+
+    @property
+    def total_value(self):
+        if self.end_date is not None:
+            delta = self.end_date - self.start_date
+            return self.value * delta.days // 30
+        else:
+            return 0
+
+    @property
+    def current_value(self):
+        if self.active:
+            delta = datetime.datetime.today().date() - self.start_date
+            return self.value * (delta.days // 30)
+        else:
+            return self.total_value
 
     class Meta:
-        unique_together = (('member', 'course', 'month'),)
+        unique_together = (('member', 'course'),)
+
 
 class Payment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payments')
