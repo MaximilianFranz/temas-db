@@ -1,9 +1,12 @@
 from rest_framework import mixins, generics, viewsets
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
+from rest_framework.authtoken import views as rest_framework_views
 from rest_framework import permissions
 
 from django.contrib.auth.models import User
+import datetime
 
 #TODO: Sort and structure imports
 
@@ -75,8 +78,6 @@ class DepartmentList(generics.ListCreateAPIView):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
 
-    # permission_classes = [permissions.IsAuthenticated]
-
 
 class DepartmentDetail(generics.RetrieveUpdateDestroyAPIView):
 
@@ -136,7 +137,6 @@ class IDCardList(generics.ListCreateAPIView):
     serializer_class = IDCardSerializer
 
     def perform_create(self, serializer):
-        print('got here')
         serializer.save(member=None, supervisor=None)
 
 class IDCardDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -157,7 +157,7 @@ class AttendanceDetails(generics.RetrieveUpdateDestroyAPIView):
 
 
 ####-------------------------------------------------
-# Special, functional fiews
+# Special, functional views
 ####-------------------------------------------------
 
 class CourseDatesList(APIView):
@@ -167,3 +167,20 @@ class CourseDatesList(APIView):
         dates = SpecificDate.objects.all().filter(course=course_pk)
         serializer = SpecificDateSerializer(dates, many=True)
         return Response(serializer.data)
+
+
+class GetUserInfo(APIView):
+
+    def get(self, request, username):
+
+        user = User.objects.get(username=username)
+        profile = user.supervisor_profile
+        serializer = SupervisorSerializer(profile, many=False)
+        return Response(serializer.data)
+
+
+@api_view(['POST'])
+@authentication_classes(())
+@permission_classes(())
+def auth_view(request, format=None):
+    return rest_framework_views.obtain_auth_token

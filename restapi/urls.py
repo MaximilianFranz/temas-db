@@ -32,6 +32,8 @@ urlpatterns = [
     url(r'^coursedates/(?P<course_pk>[0-9]+)/$', views.CourseDatesList.as_view(), name='coursedates'),
 
     url(r'^get_auth/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
+    # url(r'^get_auth/$', views.auth_view, name='get_auth_token'),
+    url(r'^get_userinfo/(?P<username>[\w-]+)/$', views.GetUserInfo.as_view(), name='get_user_info'),
 ]
 
 # This allows to use multiple formats together with the generic 'Response' used in class based views
