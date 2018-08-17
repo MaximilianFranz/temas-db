@@ -179,9 +179,19 @@ class Subscription(models.Model):
 
 class Payment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='payments')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, blank=True, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='payments')
+    supervisor = models.ForeignKey(SupervisorProfile,
+                                   on_delete=models.CASCADE,
+                                   blank=True, null=True,
+                                   related_name='supervised_payments')
     date = models.DateField(default=datetime.date.today)
-    value = models.FloatField()
+    value = models.DecimalField(decimal_places=2, max_digits=5)
 
+
+class SupervisorPayment(models.Model):
+
+    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='payments')
+    date = models.DateField(auto_now_add=True, help_text="Date of the payment; auto add now is on")
+    value = models.DecimalField(decimal_places=2, max_digits=5, default=15, help_text="Loan paid")
+    note = models.TextField(help_text="Additional notes regarding the payment")
 
