@@ -5,14 +5,17 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 from temas_db import settings
+from decimal import Decimal
 
 import datetime
 
-
-
-# TODO: move all static Sets somewhere with explanation
-
+# TODO: Test SupervisorPayments
+# TODO: Replace Python logic with Database query expressions
+# TODO: move all static Sets & DEFAULTS somewhere with explanation
 # TODO: Explain need of blank=True and null=True.
+# TODO: Comments & Doc
+# TODO: Helptexts
+# TODO: QuerySets? When to use?
 
 @receiver(post_save, sender=User)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
