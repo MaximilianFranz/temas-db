@@ -45,16 +45,45 @@ class Member(models.Model):
     @property
     def balance(self):
         payments = self.payments.all()
-        balance = 0
-        for payment in payments:
-            balance += payment.value
-
-        subcriptions = self.subscriptions.all()
+        balance = self.payments.all().aggregate(payed=models.Sum('value')).get('payed')
+        subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull = True) |
+                                                       models.Q(end_date__gte = datetime.date.today()))
         for subcription in subcriptions:
-            if subcription.active:
-                balance -= subcription.accumulated_value
+            balance -= subcription.accumulated_value
 
         return balance
+
+    @property
+    def percentage_attended(self):
+        """
+
+        :return: Percentage of past subscribed course-dates this member attended
+        """
+        number_attended = self.attendance_set.filter(status_in = [2]).count()
+        total_number = self.attendance_set.count()
+        return number_attended / total_number
+
+    @property
+    def last_payment_date(self):
+        """
+        Date of last payment made by this member
+        :return:
+        """
+
+        payments = self.payments.all()
+        if payments.count() != 0:
+            last_payment = payments.order_by('-date')[1]
+            return last_payment.date
+        else:
+            return datetime.date.min
+
+    def critical(self, critical_number):
+        """
+        :return: True if member attendance was unspecified or not-attended
+        (i.e. not excused or attended) for more than 'critical_number' times
+        """
+        pass
+
 
 
 class Department(models.Model):
@@ -72,15 +101,55 @@ class EventType(models.Model):
 class SupervisorProfile(models.Model):
 
     first_name = models.CharField(max_length=50)
+
     last_name = models.CharField(max_length=50)
+
     address = models.CharField(max_length=400)
+
     birthday = models.DateField(default=datetime.date.today)
+
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
+
+    # 4 max digits and two digits after dot. e.g. 15.00 € but not 150.0 €...; Default 15
+    wage = models.DecimalField(decimal_places=2, max_digits=4, default=15, help_text="Hourly wage of the supervisor")
+
+    # banking_info = models.TextField(help_text="banking information of the supervisor to pay")
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, related_name='supervisor_profile')
 
-    # TODO: Create User model for authentication together with Supervisor
-    # TODO: Banking information
+    @property
+    def last_payment_date(self):
+        """
+        Returns date of the last payment made
+        :return:
+        """
+
+        if self.payments.all().count() is not 0:
+            last_payment = self.payments.all().order_by('-date')[0]
+            return last_payment.date
+        else:
+            return datetime.date.min
+
+    @property
+    def amount_due(self):
+        """
+
+        :return:
+        """
+        due_dates = self.supervised_dates.all().filter(models.Q(date__gte = self.last_payment_date) &
+                                           models.Q(date__lte = datetime.date.today()))
+
+        amount_due = 0
+
+        for date in due_dates:
+            # manually calculate total time in hours of this course from datetime.time objects
+            total_time_in_hours = Decimal(date.end_time.hour - date.start_time.hour + \
+                                  (date.end_time.minute - date.start_time.minute) / 60)
+
+            amount_due += total_time_in_hours * self.wage
+
+        return amount_due
+
 
 
 DAYS_OF_WEEK = ((0, 'Monday'),
@@ -104,13 +173,58 @@ class Course(models.Model):
     start_time = models.TimeField(default=datetime.time(16,00,00))
     end_time = models.TimeField(default=datetime.time(17,30,00))
 
+    @property
+    def number_of_participants(self):
+        subs = list(filter(lambda sub: sub.active, self.subscriptions.all()))
+        return len(subs)
+
+    @property
+    def total_money_earned(self):
+        total_value = 0
+        total_value = self.payments.all().aggregate(total_value=models.Sum('value')).get('total_value')
+        #
+        return total_value
+
+    @property
+    def total_money_spent(self):
+        total = 0
+        all_past_dates = self.dates.all().filter(date__lte = datetime.date.today())
+        # all_past_dates = list(filter(lambda specific_date: specific_date.is_past, self.dates.all()))
+
+        # TODO: Replace this with a query expression?
+        for date in all_past_dates:
+            # manually calculate total time in hours of this course from datetime.time objects
+            total_time_in_hours = Decimal(date.end_time.hour - date.start_time.hour + \
+                                  (date.end_time.minute - date.start_time.minute) / 60)
+            for sup in date.supervisor.all():
+                total += total_time_in_hours * sup.wage
+
+        return total
+
+    @property
+    def balance(self):
+        return self.total_money_earned - self.total_money_spent
+
+    @property
+    def avg_attendance(self):
+        """
+
+        :return: average percentage of total participants that attended past courses (STATUS 2 = 'attended')
+        """
+        all_past_dates = self.dates.all().filter(date__lte=datetime.date.today())
+        count = all_past_dates.count()
+        attendance_sum = 0
+        for date in all_past_dates:
+            attendance_sum += date.percentage_attended()
+
+        return attendance_sum / count
 
 class SpecificDate(models.Model):
 
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None)
-    supervisor = models.ManyToManyField(SupervisorProfile, blank=True, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None, related_name='dates')
+    supervisor = models.ManyToManyField(SupervisorProfile, blank=True, null=True, related_name='supervised_dates')
 
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
@@ -121,6 +235,16 @@ class SpecificDate(models.Model):
 
     class Meta:
         unique_together = ('date', 'course')
+
+    def is_past(self):
+        return self.date < datetime.datetime.today().date()
+
+    def percentage_attended(self):
+        number_attended = self.attendees.all().filter(status__in = [2]).count()
+        total = self.attendees.all().count()
+        return number_attended / total
+
+
 
 
 ATTENDANCE_STATUS = ((0, 'not specified'),
@@ -146,7 +270,7 @@ class Subscription(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
     start_date = models.DateField(default=datetime.date.today)
     end_date = models.DateField(null=True, blank=True)
-    value = models.FloatField() # monthly value of this
+    value = models.DecimalField(decimal_places=2, max_digits=4)
 
     @property
     def length(self):
