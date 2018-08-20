@@ -56,7 +56,9 @@ class MemberSerializer(serializers.ModelSerializer):
                   'mailNotification',
                   'id_card',
                   'attended_dates',
-                  'balance')
+                  'balance',
+                  'percentage_attended',
+                  'last_payment_date')
 
 
 class IDCardSerializer(serializers.ModelSerializer):
@@ -185,8 +187,10 @@ class SupervisorSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupervisorProfile
 
+
+        # fields = '__all__'
         fields = ('id','first_name','last_name', 'address', 'birthday', 'department',
-                  'courses', 'username', 'email', 'password')
+                   'courses', 'username', 'email', 'password', 'amount_due', 'last_payment_date', 'supervised_dates')
         related_fields = ['user']
 
     def update(self, instance, validated_data):
@@ -208,6 +212,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
 
         supervisor = super(SupervisorSerializer, self).create(validated_data)
         return supervisor
+
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -271,7 +276,21 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('id','name', 'day_of_week', 'supervisor', 'department', 'members', 'eventtype', 'start_time', 'end_time' )
+        fields = ('id',
+                  'name',
+                  'day_of_week',
+                  'supervisor',
+                  'department',
+                  'members',
+                  'eventtype',
+                  'start_time',
+                  'end_time',
+                  'number_of_participants',
+                  'total_money_earned',
+                  'total_money_spent',
+                  'balance',
+                  'avg_attendance'
+                  )
 
     def get_members(self, obj):
         """
@@ -281,8 +300,9 @@ class CourseSerializer(serializers.ModelSerializer):
         :return: serialized data for the field members
 
         """
-        subscriptions = Subscription.objects.filter(course=obj.pk)
-        active_subscriptions = [sub for sub in subscriptions if sub.active] # filter out passive subscriptions
+        active_subscriptions = Subscription.objects.filter(models.Q(course=obj.pk) &
+                                                    (models.Q(end_date__isnull = True) |
+                                                     models.Q(end_date__gte = datetime.date.today())))
         members = Member.objects.filter(subscriptions__in=active_subscriptions)
         serializer = MemberSerializer(members, many=True)
         return serializer.data
