@@ -106,18 +106,10 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         :param validated_data:
         :return: the full fledged instance of the SpecificDate model
         """
-        if validated_data['start_time'] is None or validated_data['end_time'] is None:
-            validated_data['start_time'] = validated_data['course'].start_time
-            validated_data['end_time'] = validated_data['course'].end_time
-
         if len(validated_data['supervisor']) == 0:
             validated_data['supervisor'] = validated_data['course'].supervisor.all()
 
         specific_date = super(SpecificDateSerializer, self).create(validated_data)
-
-        for subscription in validated_data['course'].subscriptions.all():
-            if subscription.active:
-                Attendance.objects.create(status=0, member=subscription.member, date=specific_date)
 
         return specific_date
 
@@ -147,6 +139,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         """
         if data['date'].weekday() != data['course'].day_of_week:
             raise serializers.ValidationError('Date is not on the weekday of this course')
+
 
 class SupervisorField(serializers.PrimaryKeyRelatedField):
     """

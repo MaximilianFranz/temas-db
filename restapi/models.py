@@ -243,12 +243,26 @@ class SpecificDate(models.Model):
     def is_past(self):
         return self.date < datetime.datetime.today().date()
 
+    @property
     def percentage_attended(self):
         number_attended = self.attendees.all().filter(status__in = [2]).count()
         total = self.attendees.all().count()
         return number_attended / total
 
+    def save(self, *args, **kwargs):
+        # pre_save to work with relations and model
+        super(SpecificDate, self).save(*args, **kwargs)
 
+        if self.start_time is None or self.end_time is None:
+            self.start_time = self.course.start_time
+            self.end_time = self.course.end_time
+
+        active_course_subcriptions = self.course.subscriptions.all().filter(models.Q(end_date__isnull = True) |
+                                                                            models.Q(end_date__gte = datetime.date.today()))
+        for sub in active_course_subcriptions:
+            Attendance.objects.create(status=0, member=sub.member, date=self)
+
+        super(SpecificDate, self).save()
 
 
 ATTENDANCE_STATUS = ((0, 'not specified'),
