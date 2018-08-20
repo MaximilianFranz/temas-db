@@ -42,7 +42,6 @@ class Member(models.Model):
     mailNotification = models.BooleanField(default=False)
     #photo = models.ImageField()
     id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='member', blank=True, null=True)
-    waiting_for = models.ManyToManyField(Course, through=WaitingDetails)
 
     def __str__(self):
         return self.first_name + " " + self.last_name
@@ -193,9 +192,7 @@ class Course(models.Model):
 
     @property
     def total_money_earned(self):
-        total_value = 0
         total_value = self.payments.all().aggregate(total_value=models.Sum('value')).get('total_value')
-        #
         return total_value
 
     @property
@@ -227,7 +224,7 @@ class Course(models.Model):
         count = all_past_dates.count()
         attendance_sum = 0
         for date in all_past_dates:
-            attendance_sum += date.percentage_attended()
+            attendance_sum += date.percentage_attended
 
         return attendance_sum / count
 
@@ -255,8 +252,12 @@ class SpecificDate(models.Model):
 
     @property
     def percentage_attended(self):
-        number_attended = self.attendees.all().filter(status__in = [2]).count()
-        total = self.attendees.all().count()
+        number_attended = self.attendance_set.all().filter(status__in = [2]).count()
+        total = self.attendance_set.all().count()
+
+        if number_attended is 0 or total is 0:
+            return 0
+
         return number_attended / total
 
     def save(self, *args, **kwargs):
@@ -298,7 +299,7 @@ class Subscription(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
     start_date = models.DateField(default=datetime.date.today)
     end_date = models.DateField(null=True, blank=True)
-    value = models.DecimalField(decimal_places=2, max_digits=4)
+    value = models.DecimalField(decimal_places=2, max_digits=4, help_text="monthly value of this subscription")
 
     @property
     def length(self):
