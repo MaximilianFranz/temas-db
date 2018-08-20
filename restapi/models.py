@@ -42,9 +42,14 @@ class Member(models.Model):
     mailNotification = models.BooleanField(default=False)
     #photo = models.ImageField()
     id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='member', blank=True, null=True)
+    waiting_for = models.ManyToManyField(Course, through=WaitingDetails)
 
     def __str__(self):
         return self.first_name + " " + self.last_name
+
+    @property
+    def is_waiting(self):
+        return self.waiting_for.all().count() is not 0
 
     @property
     def balance(self):
@@ -342,3 +347,9 @@ class SupervisorPayment(models.Model):
     value = models.DecimalField(decimal_places=2, max_digits=5, default=15, help_text="Loan paid")
     note = models.TextField(help_text="Additional notes regarding the payment")
 
+class WaitingDetails(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    # Doesn't have to wait for a specific course
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True)
+    note = models.TextField(help_text='Additional info about the waiting list entry')
+    waiting_since = models.DateField(default=datetime.date.today, help_text="since when the member is waiting")
