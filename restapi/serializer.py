@@ -125,6 +125,14 @@ class SpecificDateSerializer(serializers.ModelSerializer):
             if sub.active:
                 Attendance.objects.get_or_create(member=sub.member, date=obj)
 
+        # clean out obsolete attendance objects
+        for attendance in obj.attendance_set.all():
+            if not Subscription.objects.all().\
+                    filter(member=attendance.member, course=attendance.date.course).\
+                    exists():
+                # No subscription for the course of this attendance, thus delete attendance
+                attendance.delete()
+
         attendance_set = obj.attendance_set
         serializer = AttendanceSerializer(attendance_set, many=True)
 
@@ -286,6 +294,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         fields = ('course', 'member', 'start_date', 'end_date',
                   'value', 'accumulated_value', 'length', 'active')
 
+    def validate(self, data):
+        if data['course'].number_of_participants >= data['course'].max_attendees:
+            WaitingDetails.objects.create(member=data['member'],
+                                          course=data['course'],
+                                          note="Auto added because course is full")
+            raise serializers.ValidationError('Course is full, automatically put member on waiting list')
+
+        return super(SubscriptionSerializer, self).validate(data)
 
 
 class PaymentSerializer(serializers.ModelSerializer):

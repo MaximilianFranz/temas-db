@@ -178,6 +178,7 @@ class Course(models.Model):
     supervisor = models.ManyToManyField(SupervisorProfile, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     eventtype = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+    max_attendees = models.IntegerField(max_length=2, default=15)
 
     # TODO : Refactor default times clean!
     start_time = models.TimeField(default=datetime.time(16,00,00))
