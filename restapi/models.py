@@ -10,6 +10,7 @@ from decimal import Decimal
 import datetime
 
 # TODO: Test SupervisorPayments
+# TODO: Test Statistics and Detail methods with edge cases
 # TODO: Replace Python logic with Database query expressions
 # TODO: move all static Sets & DEFAULTS somewhere with explanation
 # TODO: Explain need of blank=True and null=True.
@@ -62,7 +63,7 @@ class Member(models.Model):
 
         :return: Percentage of past subscribed course-dates this member attended
         """
-        number_attended = self.attendance_set.filter(status_in = [2]).count()
+        number_attended = self.attendance_set.filter(status__in=[2]).count()
         total_number = self.attendance_set.count()
         return number_attended / total_number
 
