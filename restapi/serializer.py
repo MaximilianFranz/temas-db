@@ -1,9 +1,10 @@
 from rest_framework import serializers
 from rest_framework.validators import  UniqueForMonthValidator
 from django.contrib.auth.models import User
-from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance
+from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance, WaitingDetails
 from restapi.models import Department, EventType, Course, Subscription, Payment, SupervisorPayment
 import collections
+from django.db import models
 import datetime
 
 # import settings for global constants
@@ -310,6 +311,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('id', 'member', 'course', 'date', 'value')
 
+
 class SupervisorPaymentSerializer(serializers.ModelSerializer):
 
     supervisor = SupervisorField(queryset=SupervisorProfile.objects.all())
@@ -317,3 +319,12 @@ class SupervisorPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupervisorPayment
         fields = ('id', 'supervisor', 'date', 'value', 'note')
+
+
+class WaitingDetailsSerializer(serializers.ModelSerializer):
+
+    member = MemberField(queryset=Member.objects.all())
+
+    class Meta:
+        model = WaitingDetails
+        fields = ('id', 'member', 'course', 'waiting_since', 'note')
