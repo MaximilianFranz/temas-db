@@ -124,8 +124,8 @@ class SupervisorProfile(models.Model):
     @property
     def last_payment_date(self):
         """
-        Returns date of the last payment made
-        :return:
+
+        :return: date of the last payment made to this supervisor
         """
 
         if self.payments.all().count() is not 0:
@@ -138,7 +138,9 @@ class SupervisorProfile(models.Model):
     def amount_due(self):
         """
 
-        :return:
+        Calculates the amount of money this supervisor has to receive calculating from the last payment
+
+        :return: amount to be payed since last payment to this supervisor
         """
         due_dates = self.supervised_dates.all().filter(models.Q(date__gte = self.last_payment_date) &
                                            models.Q(date__lte = datetime.date.today()))
@@ -179,8 +181,10 @@ class Course(models.Model):
 
     @property
     def number_of_participants(self):
-        subs = list(filter(lambda sub: sub.active, self.subscriptions.all()))
-        return len(subs)
+
+        active_subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull = True) |
+                                                       models.Q(end_date__gte = datetime.date.today()))
+        return active_subcriptions.count()
 
     @property
     def total_money_earned(self):
@@ -193,7 +197,6 @@ class Course(models.Model):
     def total_money_spent(self):
         total = 0
         all_past_dates = self.dates.all().filter(date__lte = datetime.date.today())
-        # all_past_dates = list(filter(lambda specific_date: specific_date.is_past, self.dates.all()))
 
         # TODO: Replace this with a query expression?
         for date in all_past_dates:
@@ -232,6 +235,8 @@ class SpecificDate(models.Model):
 
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
+
+
 
     # DEBUG Representation
     def __str__(self):
