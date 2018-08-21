@@ -345,13 +345,14 @@ class Payment(models.Model):
 class SupervisorPayment(models.Model):
 
     supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='payments')
-    date = models.DateField(auto_now_add=True, help_text="Date of the payment; auto add now is on")
+    date = models.DateField(auto_now_add=True, help_text="Date of the payment; auto add now is on", blank=True, null=True)
     value = models.DecimalField(decimal_places=2, max_digits=5, default=15, help_text="Loan paid")
     note = models.TextField(help_text="Additional notes regarding the payment")
 
+
 class WaitingDetails(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='waiting_for')
     # Doesn't have to wait for a specific course
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True, related_name='waiting_list')
     note = models.TextField(help_text='Additional info about the waiting list entry')
     waiting_since = models.DateField(default=datetime.date.today, help_text="since when the member is waiting")

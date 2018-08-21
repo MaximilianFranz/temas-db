@@ -29,7 +29,17 @@ urlpatterns = [
     url(r'^attendance/(?P<pk>[0-9]+)/$', views.AttendanceDetails.as_view(), name='attendance-detail'),
     url(r'^users/$', views.UserList.as_view(), name='user-list'),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name='user-detail'),
+
+
+    url(r'^supervisor_payments/$', views.SupervisorPaymentList.as_view(), name='supervisor_payment-list'),
+    url(r'^supervisor_payments/(?P<pk>[0-9]+)/$', views.SupervisorPaymentDetail.as_view(), name='supervisor_payment-detail'),
+
+    url(r'^waiting_details/$', views.WaitingDetailList.as_view(), name='waiting_details-list'),
+    url(r'^waiting_details/(?P<pk>[0-9]+)/$', views.WaitingDetailSingle.as_view(), name='waiting_details-single'),
+
     url(r'^coursedates/(?P<course_pk>[0-9]+)/$', views.CourseDatesList.as_view(), name='coursedates'),
+
+
 
     url(r'^get_auth/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     # url(r'^get_auth/$', views.auth_view, name='get_auth_token'),

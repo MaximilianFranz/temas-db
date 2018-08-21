@@ -11,10 +11,10 @@ import datetime
 #TODO: Sort and structure imports
 
 from restapi.models import Member, SpecificDate, SupervisorProfile, Course, EventType, Payment
-from restapi.models import Attendance, Subscription, IDCard, Department
+from restapi.models import Attendance, Subscription, IDCard, Department, SupervisorPayment, WaitingDetails
 from restapi.serializer import MemberSerializer, SpecificDateSerializer, IDCardSerializer, SubscriptionSerializer, AttendanceSerializer
 from restapi.serializer import EventTypeSerializer, PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer, UserSerializer
-
+from restapi.serializer import SupervisorPaymentSerializer, WaitingDetailsSerializer
 # Create your views here.
 
 
@@ -155,6 +155,25 @@ class AttendanceDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
 
+####----------------------------------------------
+
+class SupervisorPaymentList(generics.ListCreateAPIView):
+    queryset = SupervisorPayment.objects.all()
+    serializer_class = SupervisorPaymentSerializer
+
+class SupervisorPaymentDetail(generics.RetrieveAPIView):
+    queryset = SupervisorPayment.objects.all()
+    serializer_class = SupervisorPaymentSerializer
+
+####----------------------------------------------
+
+class WaitingDetailList(generics.ListCreateAPIView):
+    queryset = WaitingDetails.objects.all()
+    serializer_class = WaitingDetailsSerializer
+
+class WaitingDetailSingle(generics.RetrieveUpdateDestroyAPIView):
+    queryset = WaitingDetails.objects.all()
+    serializer_class = WaitingDetailsSerializer
 
 ####-------------------------------------------------
 # Special, functional views
