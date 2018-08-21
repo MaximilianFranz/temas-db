@@ -112,7 +112,7 @@ class SupervisorProfile(models.Model):
 
     last_name = models.CharField(max_length=50)
 
-    address = models.CharField(max_length=400)
+    address = models.TextField(max_length=400)
 
     birthday = models.DateField(default=datetime.date.today)
 

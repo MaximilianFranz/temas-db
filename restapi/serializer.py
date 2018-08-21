@@ -184,13 +184,37 @@ class SupervisorSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email')
     password = serializers.CharField(source='user.password', write_only=True)
 
+
     class Meta:
         model = SupervisorProfile
 
-        fields = ('id','first_name','last_name', 'address', 'birthday', 'department',
-                   'courses', 'username', 'email', 'password', 'amount_due', 'last_payment_date', 'supervised_dates', 'wage')
+        fields = ('id',
+                  'first_name',
+                  'last_name',
+                  'address',
+                  'birthday',
+                  'wage',
+                  'banking_info',
+                  # user model
+                  'username',
+                  'email',
+                  'password',
+                  # property methods
+                  'amount_due',
+                  'last_payment_date',
+                  # backward relation ForeignKey fields
+                  'department',
+                  'courses',
+                  'supervised_dates',
+                  )
 
         related_fields = ['user']
+        # make all FK fields read_only
+        extra_kwargs = {
+                        'courses' : {'read_only' : True},
+                        'department' : {'read_only' : True},
+                        'supervised_dates' : {'read_only' : True}
+                        }
 
     def update(self, instance, validated_data):
 
