@@ -116,12 +116,12 @@ class SupervisorProfile(models.Model):
 
     birthday = models.DateField(default=datetime.date.today)
 
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
-
     # 4 max digits and two digits after dot. e.g. 15.00 € but not 150.0 €...; Default 15
     wage = models.DecimalField(decimal_places=2, max_digits=4, default=15, help_text="Hourly wage of the supervisor")
 
-    # banking_info = models.TextField(help_text="banking information of the supervisor to pay")
+    banking_info = models.TextField(help_text="banking information of the supervisor to pay")
+
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, related_name='supervisor_profile')
 

@@ -187,18 +187,26 @@ class SupervisorSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupervisorProfile
 
-
-        # fields = '__all__'
         fields = ('id','first_name','last_name', 'address', 'birthday', 'department',
-                   'courses', 'username', 'email', 'password', 'amount_due', 'last_payment_date', 'supervised_dates')
+                   'courses', 'username', 'email', 'password', 'amount_due', 'last_payment_date', 'supervised_dates', 'wage')
+
         related_fields = ['user']
 
     def update(self, instance, validated_data):
-        super(SupervisorSerializer, self).update(instance, validated_data)
-        instance.user.set_password(validated_data.get('user',{}).get('password'))
+
+        pw = validated_data['user']['password']
+        if instance.user.check_password(pw):
+            # pretty much Non-sense
+            instance.user.set_password(pw)
+        else:
+            raise serializers.ValidationError("Wrong password, use same password on edit to confirm")
+
         instance.user.email = validated_data.get('user', {}).get('email')
         instance.user.username = validated_data.get('user', {}).get('username')
         instance.save()
+        # make the argument 'user' a full fledged instance, so that SupervisorSerializer can work with it
+        validated_data['user'] = instance.user
+        return super(SupervisorSerializer, self).update(instance, validated_data)
 
     def create(self, validated_data):
         kwargs = {'email' : validated_data['user'].pop('email'),
