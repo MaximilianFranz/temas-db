@@ -146,24 +146,27 @@ class SupervisorProfile(models.Model):
 
         :return: amount to be payed since last payment to this supervisor
         """
-        due_dates = self.supervised_dates.all().filter(models.Q(date__gte = self.last_payment_date) &
-                                           models.Q(date__lte = datetime.date.today()))
+        # query SpecificDates until today and sum over time_in_hours
+        # models.Q(date__gte = self.last_payment_date) &
+        total_time_in_hours = self.supervised_dates.all().filter(models.Q(date__lte=datetime.date.today())). \
+            aggregate(total_time=models.Sum('time_in_hours')).get('total_time')
 
-        amount_due = 0
+        if total_time_in_hours is None:
+            total_time_in_hours = 0
 
-        for date in due_dates:
-            # manually calculate total time in hours of this course from datetime.time objects
-            total_time_in_hours = Decimal(date.end_time.hour - date.start_time.hour + \
-                                  (date.end_time.minute - date.start_time.minute) / 60)
+        total_amount_due = total_time_in_hours * self.wage
+        return total_amount_due - self.total_amount_payed
 
-            amount_due += total_time_in_hours * self.wage
-
-        return amount_due
-
-
+    @property
+    def total_amount_payed(self):
+        amount_payed = self.payments.all().aggregate(total_amount=models.Sum('value')).get('total_amount')
+        if amount_payed is None:
+            amount_payed = 0
+            
+        return amount_payed
 
 DAYS_OF_WEEK = ((0, 'Monday'),
-                (1,'Tuesday'),
+                (1, 'Tuesday'),
                 (2, 'Wednesday'),
                 (3, 'Thursday'),
                 (4, 'Friday'),
@@ -199,15 +202,13 @@ class Course(models.Model):
     @property
     def total_money_spent(self):
         total = 0
-        all_past_dates = self.dates.all().filter(date__lte = datetime.date.today())
+        all_past_dates = self.dates.all().filter(date__lte=datetime.date.today())
 
         # TODO: Replace this with a query expression?
         for date in all_past_dates:
             # manually calculate total time in hours of this course from datetime.time objects
-            total_time_in_hours = Decimal(date.end_time.hour - date.start_time.hour + \
-                                  (date.end_time.minute - date.start_time.minute) / 60)
             for sup in date.supervisor.all():
-                total += total_time_in_hours * sup.wage
+                total += date.time_in_hours * sup.wage
 
         return total
 
@@ -229,8 +230,20 @@ class Course(models.Model):
 
         return attendance_sum / count
 
-class SpecificDate(models.Model):
+    def save(self, *args, **kwargs):
+        """
 
+        Override save() to set time_in_hours as a database field calculated from start and end-tim
+
+        Params see Django doc.
+        """
+        self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
+                                     (self.end_time.minute - self.start_time.minute) / 60)
+
+        super(Course, self).save(args, kwargs)
+
+
+class SpecificDate(models.Model):
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None, related_name='dates')
@@ -238,8 +251,8 @@ class SpecificDate(models.Model):
 
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
-
-
+    time_in_hours = models.DecimalField(max_digits=3, decimal_places=2, help_text="End minus Start-Time in hours",
+                                        default=1.5)
 
     # DEBUG Representation
     def __str__(self):
@@ -262,15 +275,32 @@ class SpecificDate(models.Model):
         return number_attended / total
 
     def save(self, *args, **kwargs):
+        """
+
+        Override save() to
+        1. fill fields from related course if not stated otherwise
+        2. create Attendance based on subscription
+
+        Note: Supervision is managed in Serialzer create(), since manipulation m2m relationships
+        in here is not viable.
+
+        :return:
+        """
         # pre_save to work with relations and model
         super(SpecificDate, self).save(*args, **kwargs)
 
         if self.start_time is None or self.end_time is None:
             self.start_time = self.course.start_time
             self.end_time = self.course.end_time
+            self.time_in_hours = self.course.time_in_hours  # Also set this, as it only depends on start / end time
+        else:
+            # set time_in_hours independently of course if start and end-time are set.
+            self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
+                                         (self.end_time.minute - self.start_time.minute) / 60)
 
-        active_course_subcriptions = self.course.subscriptions.all().filter(models.Q(end_date__isnull = True) |
-                                                                            models.Q(end_date__gte = datetime.date.today()))
+        active_course_subcriptions = self.course.subscriptions.all().filter(models.Q(end_date__isnull=True) |
+                                                                            models.Q(
+                                                                                end_date__gte=datetime.date.today()))
         for sub in active_course_subcriptions:
             Attendance.objects.create(status=0, member=sub.member, date=self)
 

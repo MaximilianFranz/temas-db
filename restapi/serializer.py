@@ -99,7 +99,9 @@ class SpecificDateSerializer(serializers.ModelSerializer):
                   'course',
                   'supervisor',
                   'start_time',
-                  'end_time')
+                  'end_time',
+                  'time_in_hours'
+                  )
 
     def create(self, validated_data):
         """
@@ -317,6 +319,7 @@ class CourseSerializer(serializers.ModelSerializer):
                   'eventtype',
                   'start_time',
                   'end_time',
+                  'time_in_hours',
                   'number_of_participants',
                   'total_money_earned',
                   'total_money_spent',
