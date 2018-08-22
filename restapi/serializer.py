@@ -357,6 +357,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                                           note="Auto added because course is full")
             raise serializers.ValidationError('Course is full, automatically put member on waiting list')
 
+        # check for active subscriptions of this member on this course
+        active_count = Subscription.objects.all().\
+            filter(member=data['member'].id).\
+            filter(course=data['course'].id).\
+            filter(models.Q(end_date__gte=datetime.date.today()) |
+                   models.Q(end_date__isnull=True)).count()
+
+        if active_count is not 0:
+            raise serializers.ValidationError('Only one active subscription per Member and Course is allowed')
+
         return super(SubscriptionSerializer, self).validate(data)
 
 

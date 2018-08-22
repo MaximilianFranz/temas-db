@@ -352,10 +352,7 @@ class Subscription(models.Model):
             return self.value * (delta.days // 30)
         else:
             delta = self.end_date - self.start_date
-            return self.value * delta.days // 30
-
-    class Meta:
-        unique_together = (('member', 'course'),)
+            return self.value * (delta.days // 30)
 
 
 class Payment(models.Model):
