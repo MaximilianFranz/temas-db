@@ -9,6 +9,7 @@ from decimal import Decimal
 
 import datetime
 
+
 # TODO: Test SupervisorPayments
 # TODO: Test Statistics and Detail methods with edge cases
 # TODO: Replace Python logic with Database query expressions
@@ -23,15 +24,13 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
-class IDCard(models.Model):
 
-    card_id = models.CharField(max_length=16, unique=True) #Uniqueness by card_id is required
+class IDCard(models.Model):
+    card_id = models.CharField(max_length=16, unique=True)  # Uniqueness by card_id is required
     registered = models.DateField(default=datetime.date.today)
 
 
-
 class Member(models.Model):
-
     created = models.DateField(auto_now_add=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -40,7 +39,7 @@ class Member(models.Model):
     mail = models.EmailField(default="")
     phone = models.CharField(max_length=20)
     mailNotification = models.BooleanField(default=False)
-    #photo = models.ImageField()
+    # photo = models.ImageField()
     id_card = models.OneToOneField(IDCard, on_delete=models.CASCADE, related_name='member', blank=True, null=True)
 
     def __str__(self):
@@ -54,8 +53,8 @@ class Member(models.Model):
     def balance(self):
         payments = self.payments.all()
         balance = self.payments.all().aggregate(payed=models.Sum('value')).get('payed')
-        subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull = True) |
-                                                       models.Q(end_date__gte = datetime.date.today()))
+        subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull=True) |
+                                                       models.Q(end_date__gte=datetime.date.today()))
         for subcription in subcriptions:
             balance -= subcription.accumulated_value
 
@@ -93,21 +92,18 @@ class Member(models.Model):
         pass
 
 
-
 class Department(models.Model):
-
     name = models.CharField(max_length=50)
 
-class EventType(models.Model):
 
+class EventType(models.Model):
     name = models.CharField(max_length=100)
-    has_prio = models.BooleanField(default=False) # whether or not attendance ought to be reported!
+    has_prio = models.BooleanField(default=False)  # whether or not attendance ought to be reported!
     has_payment = models.BooleanField(default=True)
     has_subscription = models.BooleanField(default=True)
 
 
 class SupervisorProfile(models.Model):
-
     first_name = models.CharField(max_length=50)
 
     last_name = models.CharField(max_length=50)
@@ -121,7 +117,8 @@ class SupervisorProfile(models.Model):
 
     banking_info = models.TextField(help_text="banking information of the supervisor to pay")
 
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True, null=True) # multiple per Dep
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True,
+                                   null=True)  # multiple per Dep
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, related_name='supervisor_profile')
 
@@ -174,8 +171,8 @@ DAYS_OF_WEEK = ((0, 'Monday'),
                 (6, 'Sunday')
                 )
 
-class Course(models.Model):
 
+class Course(models.Model):
     name = models.CharField(max_length=50)
     day_of_week = models.IntegerField(choices=DAYS_OF_WEEK, max_length=10)
     supervisor = models.ManyToManyField(SupervisorProfile, related_name='courses', blank=True, null=True)
@@ -184,14 +181,16 @@ class Course(models.Model):
     max_attendees = models.IntegerField(max_length=2, default=15)
 
     # TODO : Refactor default times clean!
-    start_time = models.TimeField(default=datetime.time(16,00,00))
-    end_time = models.TimeField(default=datetime.time(17,30,00))
+    start_time = models.TimeField(default=datetime.time(16, 00, 00))
+    end_time = models.TimeField(default=datetime.time(17, 30, 00))
+    time_in_hours = models.DecimalField(max_digits=3, decimal_places=2, default=1.5,
+                                        help_text="Start to end-time in hours")
 
     @property
     def number_of_participants(self):
 
-        active_subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull = True) |
-                                                       models.Q(end_date__gte = datetime.date.today()))
+        active_subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull=True) |
+                                                              models.Q(end_date__gte=datetime.date.today()))
         return active_subcriptions.count()
 
     @property
@@ -266,7 +265,7 @@ class SpecificDate(models.Model):
 
     @property
     def percentage_attended(self):
-        number_attended = self.attendance_set.all().filter(status__in = [2]).count()
+        number_attended = self.attendance_set.all().filter(status__in=[2]).count()
         total = self.attendance_set.all().count()
 
         if number_attended is 0 or total is 0:
@@ -314,7 +313,6 @@ ATTENDANCE_STATUS = ((0, 'not specified'),
 
 
 class Attendance(models.Model):
-
     member = models.ForeignKey(Member, on_delete=models.CASCADE, blank=False)
     date = models.ForeignKey(SpecificDate, on_delete=models.CASCADE, blank=False)
     status = models.PositiveSmallIntegerField(choices=ATTENDANCE_STATUS, blank=False, default=0)
@@ -325,7 +323,6 @@ class Attendance(models.Model):
 
 
 class Subscription(models.Model):
-
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='subscriptions')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
     start_date = models.DateField(default=datetime.date.today)
@@ -373,11 +370,11 @@ class Payment(models.Model):
 
 
 class SupervisorPayment(models.Model):
-
     supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='payments')
-    date = models.DateField(auto_now_add=True, help_text="Date of the payment; auto add now is on", blank=True, null=True)
+    date = models.DateField(auto_now_add=True, help_text="Date of the payment; auto add now is on", blank=True,
+                            null=True)
     value = models.DecimalField(decimal_places=2, max_digits=5, default=15, help_text="Loan paid")
-    note = models.TextField(help_text="Additional notes regarding the payment")
+    note = models.TextField(help_text="Additional notes regarding the payment", blank=True, null=True)
 
 
 class WaitingDetails(models.Model):

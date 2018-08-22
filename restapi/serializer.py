@@ -371,9 +371,11 @@ class SupervisorPaymentSerializer(serializers.ModelSerializer):
 
     supervisor = SupervisorField(queryset=SupervisorProfile.objects.all())
 
+
     class Meta:
         model = SupervisorPayment
         fields = ('id', 'supervisor', 'date', 'value', 'note')
+
 
 
 class WaitingDetailsSerializer(serializers.ModelSerializer):
