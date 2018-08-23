@@ -167,7 +167,7 @@ class SupervisorProfile(models.Model):
         amount_payed = self.payments.all().aggregate(total_amount=models.Sum('value')).get('total_amount')
         if amount_payed is None:
             amount_payed = 0
-            
+
         return amount_payed
 
 DAYS_OF_WEEK = ((0, 'Monday'),
@@ -186,7 +186,7 @@ class Course(models.Model):
     supervisor = models.ManyToManyField(SupervisorProfile, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
     eventtype = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
-    max_attendees = models.IntegerField(max_length=2, default=15)
+    max_attendees = models.IntegerField(max_length=2, default=15, help_text='maximum number of members that can subscribe')
 
     # TODO : Refactor default times clean!
     start_time = models.TimeField(default=datetime.time(16, 00, 00))
@@ -196,6 +196,10 @@ class Course(models.Model):
 
     @property
     def number_of_participants(self):
+        """
+        Number of Attendees this course currently has, as in the number of active subscriptions
+        :return:
+        """
 
         active_subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull=True) |
                                                               models.Q(end_date__gte=datetime.date.today()))
@@ -314,6 +318,7 @@ class SpecificDate(models.Model):
             self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
                                          (self.end_time.minute - self.start_time.minute) / 60)
 
+        # TODO: Fix. This should return subscriptions that were active on the specificDate date.
         active_course_subcriptions = self.course.subscriptions.all().filter(models.Q(end_date__isnull=True) |
                                                                             models.Q(
                                                                                 end_date__gte=datetime.date.today()))
