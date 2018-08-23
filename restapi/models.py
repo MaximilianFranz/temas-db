@@ -51,10 +51,15 @@ class Member(models.Model):
 
     @property
     def balance(self):
+        # TODO: Update to use query expression
         payments = self.payments.all()
         balance = self.payments.all().aggregate(payed=models.Sum('value')).get('payed')
-        subcriptions = self.subscriptions.all().filter(models.Q(end_date__isnull=True) |
-                                                       models.Q(end_date__gte=datetime.date.today()))
+        subcriptions = self.subscriptions.all()
+
+
+        if balance is None:
+            balance = 0
+
         for subcription in subcriptions:
             balance -= subcription.accumulated_value
 
@@ -68,6 +73,9 @@ class Member(models.Model):
         """
         number_attended = self.attendance_set.filter(status__in=[2]).count()
         total_number = self.attendance_set.count()
+        if number_attended is 0 or total_number is 0:
+            return 0
+
         return number_attended / total_number
 
     @property
@@ -79,7 +87,7 @@ class Member(models.Model):
 
         payments = self.payments.all()
         if payments.count() != 0:
-            last_payment = payments.order_by('-date')[1]
+            last_payment = payments.order_by('-date')[0]
             return last_payment.date
         else:
             return datetime.date.min
@@ -195,7 +203,11 @@ class Course(models.Model):
 
     @property
     def total_money_earned(self):
+        # Always check aggregated values for None, as it doesn't return 0 when no entries were found
         total_value = self.payments.all().aggregate(total_value=models.Sum('value')).get('total_value')
+        if total_value is None:
+            total_value = 0
+
         return total_value
 
     @property
@@ -227,7 +239,11 @@ class Course(models.Model):
         for date in all_past_dates:
             attendance_sum += date.percentage_attended
 
+        if count is 0:
+            return 0
+
         return attendance_sum / count
+
 
     def save(self, *args, **kwargs):
         """
@@ -239,7 +255,7 @@ class Course(models.Model):
         self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
                                      (self.end_time.minute - self.start_time.minute) / 60)
 
-        super(Course, self).save(args, kwargs)
+        super(Course, self).save()
 
 
 class SpecificDate(models.Model):
@@ -288,6 +304,7 @@ class SpecificDate(models.Model):
         # pre_save to work with relations and model
         super(SpecificDate, self).save(*args, **kwargs)
 
+        # when custom start and end time are required, one must set them both, otherwise course data will be used
         if self.start_time is None or self.end_time is None:
             self.start_time = self.course.start_time
             self.end_time = self.course.end_time
@@ -378,5 +395,5 @@ class WaitingDetails(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='waiting_for')
     # Doesn't have to wait for a specific course
     course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True, related_name='waiting_list')
-    note = models.TextField(help_text='Additional info about the waiting list entry')
+    note = models.TextField(help_text='Additional info about the waiting list entry', blank=True, null=True)
     waiting_since = models.DateField(default=datetime.date.today, help_text="since when the member is waiting")
