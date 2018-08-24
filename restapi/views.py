@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from rest_framework.authtoken import views as rest_framework_views
 from rest_framework import permissions
+from django.db import models
 
 from django.contrib.auth.models import User
 import datetime
@@ -199,8 +200,11 @@ class GetUserInfo(APIView):
 
 class UnsubscribeMember(APIView):
     """
-    Unsubscribe member by updating subscription based on member_id
+    POST: Unsubscribe member by updating subscription based on member_id
     and course_id, since this is all the Frontend knows about the subscription as of now
+
+    GET: Get active Subscription based on course and member, since these make a unique set among the active
+    subscriptions
     """
 
     def post(self, request, member_pk, course_pk):
@@ -218,7 +222,18 @@ class UnsubscribeMember(APIView):
         return Response(data={'non_field_errors' : ["No active Subscription for this course and member"]},
                         status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, member_pk, course_pk):
 
+        active_sub = Subscription.objects.all().filter(member=member_pk).filter(course=course_pk)\
+            .filter((models.Q(end_date__isnull = True) | models.Q(end_date__gte = datetime.date.today()))).get()
+
+
+        if active_sub is None:
+            return Response(data={'non_field_errors' : ["No active Subscription for this course and member"]},
+            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = SubscriptionSerializer(active_sub)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 
