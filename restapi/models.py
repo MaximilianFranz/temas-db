@@ -420,7 +420,7 @@ class ExtraHours(models.Model):
                                       help_text='Wage to be paid for this time, if none supervisor.wage is used',
                                       null=True,
                                       blank=True)
-    note = models.TextField(help_text='Note on the reason or content of the extra work')
+    note = models.TextField(help_text='Note on the reason or content of the extra work', null=True, blank=True)
 
     def save(self, *args, **kwargs):
         self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
