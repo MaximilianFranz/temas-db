@@ -158,8 +158,13 @@ class SupervisorProfile(models.Model):
 
         if total_time_in_hours is None:
             total_time_in_hours = 0
-
         total_amount_due = total_time_in_hours * self.wage
+        # Add the amount of money the supervisor gets from extra work put in
+        extra_hours_amount = self.extra_hours.all().aggregate(sum_amount=models.Sum(models.F('wage_to_pay') * models.F('time_in_hours'))).get('sum_amount')
+        if extra_hours_amount is None:
+            extra_hours_amount = 0
+
+        total_amount_due += extra_hours_amount
         return total_amount_due - self.total_amount_payed
 
     @property
@@ -402,3 +407,27 @@ class WaitingDetails(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True, related_name='waiting_list')
     note = models.TextField(help_text='Additional info about the waiting list entry', blank=True, null=True)
     waiting_since = models.DateField(default=datetime.date.today, help_text="since when the member is waiting")
+
+
+class ExtraHours(models.Model):
+    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='extra_hours')
+    date = models.DateField(default=datetime.date.today, help_text='Date of the extra work')
+    start_time = models.TimeField(help_text='Start time of the extra work')
+    end_time = models.TimeField(help_text='End time of the extra work')
+    time_in_hours = models.DecimalField(max_digits=4, decimal_places=2, help_text='time in hours', null=True, blank=True)
+    wage_to_pay = models.DecimalField(max_digits=4,
+                                      decimal_places=2,
+                                      help_text='Wage to be paid for this time, if none supervisor.wage is used',
+                                      null=True,
+                                      blank=True)
+    note = models.TextField(help_text='Note on the reason or content of the extra work')
+
+    def save(self, *args, **kwargs):
+        self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
+                                         (self.end_time.minute - self.start_time.minute) / 60)
+
+        if not self.wage_to_pay:
+            self.wage_to_pay = self.supervisor.wage
+
+        super(ExtraHours, self).save()
+

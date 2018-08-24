@@ -37,6 +37,9 @@ urlpatterns = [
     url(r'^waiting_details/$', views.WaitingDetailList.as_view(), name='waiting_details-list'),
     url(r'^waiting_details/(?P<pk>[0-9]+)/$', views.WaitingDetailSingle.as_view(), name='waiting_details-single'),
 
+    url(r'^extrahours/$', views.ExtraHoursList.as_view(), name='extrahours-list'),
+    url(r'^extrahours/(?P<pk>[0-9]+)/$', views.ExtraHoursDetail.as_view(), name='extrahours-single'),
+
     url(r'^coursedates/(?P<course_pk>[0-9]+)/$', views.CourseDatesList.as_view(), name='coursedates'),
     url(r'^get_sub/(?P<member_pk>[0-9]+)/(?P<course_pk>[0-9]+)/$', views.UnsubscribeMember.as_view(), name='unsubscribe'),
 

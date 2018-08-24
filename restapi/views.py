@@ -11,11 +11,11 @@ import datetime
 
 #TODO: Sort and structure imports
 
-from restapi.models import Member, SpecificDate, SupervisorProfile, Course, EventType, Payment
+from restapi.models import Member, SpecificDate, SupervisorProfile, Course, EventType, Payment, ExtraHours
 from restapi.models import Attendance, Subscription, IDCard, Department, SupervisorPayment, WaitingDetails
 from restapi.serializer import MemberSerializer, SpecificDateSerializer, IDCardSerializer, SubscriptionSerializer, AttendanceSerializer
 from restapi.serializer import EventTypeSerializer, PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer, UserSerializer
-from restapi.serializer import SupervisorPaymentSerializer, WaitingDetailsSerializer
+from restapi.serializer import SupervisorPaymentSerializer, WaitingDetailsSerializer, ExtraHoursSerializer
 # Create your views here.
 
 
@@ -158,9 +158,11 @@ class AttendanceDetails(generics.RetrieveUpdateDestroyAPIView):
 
 ####----------------------------------------------
 
+
 class SupervisorPaymentList(generics.ListCreateAPIView):
     queryset = SupervisorPayment.objects.all()
     serializer_class = SupervisorPaymentSerializer
+
 
 class SupervisorPaymentDetail(generics.RetrieveAPIView):
     queryset = SupervisorPayment.objects.all()
@@ -168,13 +170,27 @@ class SupervisorPaymentDetail(generics.RetrieveAPIView):
 
 ####----------------------------------------------
 
+
 class WaitingDetailList(generics.ListCreateAPIView):
     queryset = WaitingDetails.objects.all()
     serializer_class = WaitingDetailsSerializer
 
+
 class WaitingDetailSingle(generics.RetrieveUpdateDestroyAPIView):
     queryset = WaitingDetails.objects.all()
     serializer_class = WaitingDetailsSerializer
+
+####----------------------------------------------
+
+
+class ExtraHoursList(generics.ListCreateAPIView):
+    queryset = ExtraHours.objects.all()
+    serializer_class = ExtraHoursSerializer
+
+
+class ExtraHoursDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ExtraHours.objects.all()
+    serializer_class = ExtraHoursSerializer
 
 ####-------------------------------------------------
 # Special, functional views
@@ -197,6 +213,7 @@ class GetUserInfo(APIView):
         profile = user.supervisor_profile
         serializer = SupervisorSerializer(profile, many=False)
         return Response(serializer.data)
+
 
 class UnsubscribeMember(APIView):
     """
