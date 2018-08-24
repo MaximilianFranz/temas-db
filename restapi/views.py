@@ -1,4 +1,4 @@
-from rest_framework import mixins, generics, viewsets
+from rest_framework import mixins, generics, viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
@@ -196,6 +196,32 @@ class GetUserInfo(APIView):
         profile = user.supervisor_profile
         serializer = SupervisorSerializer(profile, many=False)
         return Response(serializer.data)
+
+class UnsubscribeMember(APIView):
+    """
+    Unsubscribe member by updating subscription based on member_id
+    and course_id, since this is all the Frontend knows about the subscription as of now
+    """
+
+    def post(self, request, member_pk, course_pk):
+
+        subs = Subscription.objects.all().filter(member=member_pk, course=course_pk)
+        for sub in subs:
+            if sub.active:
+                sub.end_date = datetime.date.today()
+                sub.save()
+                serializer = SubscriptionSerializer(sub)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+        # Return Error message in the 'non_field_errors' field in this way so
+        # that the error handling in Ionic works properly
+        return Response(data={'non_field_errors' : ["No active Subscription for this course and member"]},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
 
 
 @api_view(['POST'])

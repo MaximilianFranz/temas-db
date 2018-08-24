@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^waiting_details/(?P<pk>[0-9]+)/$', views.WaitingDetailSingle.as_view(), name='waiting_details-single'),
 
     url(r'^coursedates/(?P<course_pk>[0-9]+)/$', views.CourseDatesList.as_view(), name='coursedates'),
+    url(r'^unsubscribe/(?P<member_pk>[0-9]+)/(?P<course_pk>[0-9]+)/$', views.UnsubscribeMember.as_view(), name='unsubscribe'),
 
 
 
