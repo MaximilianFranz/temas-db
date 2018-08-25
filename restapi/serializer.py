@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import  UniqueForMonthValidator
 from django.contrib.auth.models import User
 from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance, WaitingDetails
-from restapi.models import Department, EventType, Course, Subscription, Payment, SupervisorPayment, ExtraHours
+from restapi.models import Department, Course, Subscription, Payment, SupervisorPayment, ExtraHours
 import collections
 from django.db import models
 import datetime
@@ -293,13 +293,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ('id', 'name', 'courses', 'supervisors')
-
-
-class EventTypeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = EventType
-        fields = ('id', 'name', 'has_prio', 'has_payment', 'has_subscription', 'courses')
 
 
 class CourseSerializer(serializers.ModelSerializer):

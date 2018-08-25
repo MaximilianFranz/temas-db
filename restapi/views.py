@@ -11,10 +11,10 @@ import datetime
 
 #TODO: Sort and structure imports
 
-from restapi.models import Member, SpecificDate, SupervisorProfile, Course, EventType, Payment, ExtraHours
+from restapi.models import Member, SpecificDate, SupervisorProfile, Course, Payment, ExtraHours
 from restapi.models import Attendance, Subscription, IDCard, Department, SupervisorPayment, WaitingDetails
 from restapi.serializer import MemberSerializer, SpecificDateSerializer, IDCardSerializer, SubscriptionSerializer, AttendanceSerializer
-from restapi.serializer import EventTypeSerializer, PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer, UserSerializer
+from restapi.serializer import PaymentSerializer, CourseSerializer, SupervisorSerializer, DepartmentSerializer, UserSerializer
 from restapi.serializer import SupervisorPaymentSerializer, WaitingDetailsSerializer, ExtraHoursSerializer
 # Create your views here.
 
@@ -96,18 +96,6 @@ class CourseList(generics.ListCreateAPIView):
 class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-
-
-####----------------------------------------------
-
-class EventTypeList(generics.ListCreateAPIView):
-    queryset = EventType.objects.all()
-    serializer_class = EventTypeSerializer
-
-
-class EventTypeDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = EventType.objects.all()
-    serializer_class = EventTypeSerializer
 
 ####----------------------------------------------
 

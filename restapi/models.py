@@ -104,13 +104,6 @@ class Department(models.Model):
     name = models.CharField(max_length=50)
 
 
-class EventType(models.Model):
-    name = models.CharField(max_length=100)
-    has_prio = models.BooleanField(default=False)  # whether or not attendance ought to be reported!
-    has_payment = models.BooleanField(default=True)
-    has_subscription = models.BooleanField(default=True)
-
-
 class SupervisorProfile(models.Model):
     first_name = models.CharField(max_length=50)
 
@@ -184,13 +177,16 @@ DAYS_OF_WEEK = ((0, 'Monday'),
                 (6, 'Sunday')
                 )
 
+EVENT_TYPES = ((0, 'Course'),
+               (1, 'Free Training'))
+
 
 class Course(models.Model):
     name = models.CharField(max_length=50)
-    day_of_week = models.IntegerField(choices=DAYS_OF_WEEK, max_length=10)
+    day_of_week = models.IntegerField(choices=DAYS_OF_WEEK, max_length=10, blank=True, null=True)
     supervisor = models.ManyToManyField(SupervisorProfile, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
-    eventtype = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
+    eventtype = models.IntegerField(choices=EVENT_TYPES, max_length=1)
     max_attendees = models.IntegerField(max_length=2, default=15, help_text='maximum number of members that can subscribe')
 
     # TODO : Refactor default times clean!
