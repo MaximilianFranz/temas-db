@@ -216,6 +216,13 @@ class SupervisorProfile(models.Model):
 
     @property
     def total_amount_payed(self):
+        """
+        TODO: To omptimize, one could add a attribute 'last_neutralized', which states the last date when the amount_due
+        was 0. This way, one does not have to aggregate over all payments / dates in order to calculate the
+        current amount_due
+
+        :return: total amount payed to this supervisor
+        """
         amount_payed = self.payments.all().aggregate(total_amount=models.Sum('value')).get('total_amount')
         if amount_payed is None:
             amount_payed = 0
@@ -248,6 +255,9 @@ class Course(models.Model):
     end_time = models.TimeField(default=datetime.time(17, 30, 00))
     time_in_hours = models.DecimalField(max_digits=3, decimal_places=2, default=1.5,
                                         help_text="Start to end-time in hours")
+
+    def __str__(self):
+        return self.name
 
     @property
     def number_of_participants(self):
@@ -427,6 +437,13 @@ class Subscription(models.Model):
 
     @property
     def accumulated_value(self):
+        """
+        Note: This returns 0 as long as the subscription is less than one month.
+        It may be useful to allow half / quarter months as well to enable clearer distinction / billing
+
+        TODO: make this more intelligent based on real months and sharper distinctions
+        :return:
+        """
         if self.active:
             delta = datetime.datetime.today().date() - self.start_date
             return self.value * (delta.days // 30)

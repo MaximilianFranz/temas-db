@@ -14,6 +14,7 @@ from restapi import global_settings as gs
 
 
 
+
 # TODO: Make automatically created fields like 'created' or 'registered' to read_only
 
 class MemberField(serializers.PrimaryKeyRelatedField):
@@ -208,6 +209,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
                   'address',
                   'birthday',
                   'wage',
+                  'secondary_wage',
                   'banking_info',
                   # user model
                   'username',
