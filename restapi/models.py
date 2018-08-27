@@ -54,16 +54,55 @@ class Member(models.Model):
         # TODO: Update to use query expression
         payments = self.payments.all()
         balance = self.payments.all().aggregate(payed=models.Sum('value')).get('payed')
-        subcriptions = self.subscriptions.all()
+        subscriptions = self.subscriptions.all()
+        # sub_ids = list(map(lambda sub: sub.id, subscriptions))
 
+
+
+
+        # All Dates attended by this users where the user does not have a subscription to the related course
+        # dates_without_subscription_count = self.attended_dates.all().exclude(course__subscriptions__in=sub_ids).count()
+        # if dates_without_subscription_count is None:
+        #     dates_without_subscription_count = 0
 
         if balance is None:
             balance = 0
 
-        for subcription in subcriptions:
-            balance -= subcription.accumulated_value
+        for subscription in subscriptions:
+            balance -= subscription.accumulated_value
+
+        # 3€ per attended date without subscription
+        # balance -= dates_without_subscription_count * 3
+
+        # TODO: optimize this with proper algorithm (sliding window, see ICPC)
+        # oder subs by date, so one does not have to check all subs
+        all_free_training_dates = self.attended_dates.all().filter(course__eventtype=1)
+        all_free_training_subs = self.subscriptions.all().filter(course__eventtype=1)
+        for date in all_free_training_dates:
+            has_sub = False
+            for sub in all_free_training_subs:
+                has_sub = self.colides(date, sub)
+                # if not active sub was found on that day, 3€ are charged for the attendance
+            if not has_sub:
+                balance += -3
+
 
         return balance
+
+    def colides(self, date, sub):
+        """
+
+        :param date: SpecificDate object
+        :param sub: Subscription object
+        :return:
+        """
+        if sub.end_date is None:
+            return date.date > sub.start_date
+
+        if date.date < sub.start_date or date.date > sub.end_date:
+            return False
+        else:
+            return True
 
     @property
     def percentage_attended(self):
@@ -116,6 +155,8 @@ class SupervisorProfile(models.Model):
     # 4 max digits and two digits after dot. e.g. 15.00 € but not 150.0 €...; Default 15
     wage = models.DecimalField(decimal_places=2, max_digits=4, default=15, help_text="Hourly wage of the supervisor")
 
+    secondary_wage = models.DecimalField(decimal_places=2, max_digits=4, default=10, help_text="Secondary Hourly wage of the supervisor, for free training")
+
     banking_info = models.TextField(help_text="banking information of the supervisor to pay")
 
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='supervisors', blank=True,
@@ -140,18 +181,31 @@ class SupervisorProfile(models.Model):
     def amount_due(self):
         """
 
-        Calculates the amount of money this supervisor has to receive calculating from the last payment
+        Calculates the amount of money this supervisor has to receive in order to equalize payments
 
         :return: amount to be payed since last payment to this supervisor
         """
-        # query SpecificDates until today and sum over time_in_hours
+        # query SpecificDates of primary courses (not free-training) until today and sum over time_in_hours
         # models.Q(date__gte = self.last_payment_date) &
-        total_time_in_hours = self.supervised_dates.all().filter(models.Q(date__lte=datetime.date.today())). \
-            aggregate(total_time=models.Sum('time_in_hours')).get('total_time')
+        primary_time_in_hours = self.supervised_dates.all().filter(models.Q(date__lte=datetime.date.today()) &
+                                                                 ~models.Q(course__eventtype=1))\
+            .aggregate(total_time=models.Sum('time_in_hours')).get('total_time')
 
-        if total_time_in_hours is None:
-            total_time_in_hours = 0
-        total_amount_due = total_time_in_hours * self.wage
+        if primary_time_in_hours is None:
+            primary_time_in_hours = 0
+
+        total_amount_due = primary_time_in_hours * self.wage
+
+        # query SpecificDates of secondary courses and sum over time_in_hours
+        secondary_time_in_hours = self.supervised_dates.all().filter(models.Q(date__lte=datetime.date.today()) &
+                                                                 models.Q(course__eventtype=1))\
+            .aggregate(total_time=models.Sum('time_in_hours')).get('total_time')
+
+        if secondary_time_in_hours is None:
+            secondary_time_in_hours = 0
+
+        total_amount_due = secondary_time_in_hours * self.secondary_wage
+
         # Add the amount of money the supervisor gets from extra work put in
         extra_hours_amount = self.extra_hours.all().aggregate(sum_amount=models.Sum(models.F('wage_to_pay') * models.F('time_in_hours'))).get('sum_amount')
         if extra_hours_amount is None:
@@ -266,7 +320,7 @@ class Course(models.Model):
 class SpecificDate(models.Model):
     date = models.DateField(auto_now_add=False, default=datetime.date.today)
     attendees = models.ManyToManyField(Member, related_name='attended_dates', through='Attendance')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, default=None, related_name='dates')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='dates')
     supervisor = models.ManyToManyField(SupervisorProfile, blank=True, null=True, related_name='supervised_dates')
 
     start_time = models.TimeField(blank=True, null=True)
@@ -323,8 +377,11 @@ class SpecificDate(models.Model):
         active_course_subcriptions = self.course.subscriptions.all().filter(models.Q(end_date__isnull=True) |
                                                                             models.Q(
                                                                                 end_date__gte=datetime.date.today()))
-        for sub in active_course_subcriptions:
-            Attendance.objects.create(status=0, member=sub.member, date=self)
+        # only create attendance automatically for Courses that are not 'free-training'
+        # free-training has event type 1 (see above)
+        if self.course.eventtype is not 1:
+            for sub in active_course_subcriptions:
+                Attendance.objects.create(status=0, member=sub.member, date=self)
 
         super(SpecificDate, self).save()
 

@@ -19,3 +19,5 @@ AUTO_ADD_WAITINGLIST_NOTE = 'Automatically added to the waiting list because cou
 WRONG_PASSWORD = "Wrong password, use same password on edit to confirm"
 
 DATE_NOT_ON_WEEKDAY = 'Date is not on the weekday of this course'
+
+TOO_MANY_SUPERVISORS_FREE_TRAINING = 'Only one supervisor per Free-Training is allowed'

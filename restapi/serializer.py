@@ -127,7 +127,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         :param obj: the currently serialized instance
         :return: the serialized data for the field attendees
         """
-        for sub in obj.course.subscriptions.all():
+        for sub in obj.course.subscriptions.all().exclude(course__eventtype=1):
             if sub.active:
                 Attendance.objects.get_or_create(member=sub.member, date=obj)
 
@@ -136,8 +136,9 @@ class SpecificDateSerializer(serializers.ModelSerializer):
             if not Subscription.objects.all().\
                     filter(member=attendance.member, course=attendance.date.course).\
                     exists():
-                # No subscription for the course of this attendance, thus delete attendance
-                attendance.delete()
+                if attendance.date.course.eventtype is not 1:
+                    # No subscription for the course of this attendance, thus delete attendance
+                    attendance.delete()
 
         attendance_set = obj.attendance_set
         serializer = AttendanceSerializer(attendance_set, many=True)
@@ -146,13 +147,21 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Making sure only dates related to the course dates (i.e weekday of the course) can be created
+        Validates:
+         1. only dates related to the course dates (i.e weekday of the course) can be created
+         2. Only one supervisor for Free-Training dates is submitted.
 
         :param data:
         :return:
         """
-        if data['date'].weekday() != data['course'].day_of_week:
-            raise serializers.ValidationError(gs.DATE_NOT_ON_WEEKDAY)
+        # only check for validity if course specifies a day
+        # e.g. Free-training does not specify a day, thus all days are valid
+        if data['course'].day_of_week is not None:
+            if data['date'].weekday() != data['course'].day_of_week:
+                raise serializers.ValidationError(gs.DATE_NOT_ON_WEEKDAY)
+
+        if len(data['supervisor']) > 1 and data['course'].eventtype is 1:
+            raise serializers.ValidationError(gs.TOO_MANY_SUPERVISORS_FREE_TRAINING)
 
         return super(SpecificDateSerializer, self).validate(data)
 
