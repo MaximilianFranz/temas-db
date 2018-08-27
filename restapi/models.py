@@ -204,7 +204,7 @@ class SupervisorProfile(models.Model):
         if secondary_time_in_hours is None:
             secondary_time_in_hours = 0
 
-        total_amount_due = secondary_time_in_hours * self.secondary_wage
+        total_amount_due += secondary_time_in_hours * self.secondary_wage
 
         # Add the amount of money the supervisor gets from extra work put in
         extra_hours_amount = self.extra_hours.all().aggregate(sum_amount=models.Sum(models.F('wage_to_pay') * models.F('time_in_hours'))).get('sum_amount')
@@ -247,7 +247,7 @@ class Course(models.Model):
     day_of_week = models.IntegerField(choices=DAYS_OF_WEEK, max_length=10, blank=True, null=True)
     supervisor = models.ManyToManyField(SupervisorProfile, related_name='courses', blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='courses', blank=True, null=True)
-    eventtype = models.IntegerField(choices=EVENT_TYPES, max_length=1)
+    eventtype = models.IntegerField(choices=EVENT_TYPES, max_length=1, default=0)
     max_attendees = models.IntegerField(max_length=2, default=15, help_text='maximum number of members that can subscribe')
 
     # TODO : Refactor default times clean!
