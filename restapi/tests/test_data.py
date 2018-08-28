@@ -17,6 +17,20 @@ supervisor_1_data = {
     'password': 'testpassword',
 }
 
+supervisor_2_data = {
+    'first_name': 'Sarah',
+    'last_name': 'Stadtrand',
+    'address': 'Some Address of home',
+    'birthday': '15-05-1994',
+    'department': 1,
+    'courses': [],
+    'username': 'otheruser',
+    'email': 'mail@mail.com',
+    'wage': 15,
+    'banking_info': 'some bank',
+    'password': 'testpassword2',
+}
+
 course_1_data = {
     'name': 'Montags-Kurs',
     'day_of_week': 0,
@@ -25,6 +39,18 @@ course_1_data = {
     'department': 1,
     'max_attendees': 15
 }
+
+# free training
+course_2_data = {
+    'name': 'Free Training',
+    'eventtype': 1,
+    'start_time': '18:00',
+    'end_time': '22:00',
+    'department': 1,
+    'max_attendees': 100
+}
+
+
 
 # faulty because date is not a monday (course 1 is monday)
 specificdate_1_data = {
@@ -42,6 +68,18 @@ specificdate_2_data = {
 specificdate_3_data = {
     'date': '13-08-2018',
     'course': 1,
+}
+
+# free training date
+specificdate_4_data = {
+    'date': '14-08-2018',
+    'course': 2,
+    'supervisor': [1]
+}
+
+# free training patch for 'too many supervisor'-error
+specificdate_4_patch = {
+    'supervisor': [1, 2]
 }
 
 # Subscription from the past
@@ -70,6 +108,13 @@ subscription_3_data = {
     'value': 20
 }
 
+subscription_4_data = {
+    'course': 2,
+    'member': 2,
+    'start_date': '20-07-2018',
+    'value': 15
+}
+
 member_1_data = {
     'first_name': 'hans',
     'last_name': 'peter',
@@ -91,6 +136,13 @@ member_2_data = {
 }
 
 attendance_1_patch_data = {
+    'status' : 2
+}
+
+# free training attendance without sub
+attendance_2_data = {
+    'member' : 1,
+    'date' : 2,
     'status' : 2
 }
 

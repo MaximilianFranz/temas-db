@@ -232,6 +232,7 @@ class AdvancedTestCase(APITestCase):
         self.client.post(setup_url, data=td.member_1_data)
         setup_url = reverse('supervisor-list')
         self.client.post(setup_url, data=td.supervisor_1_data)
+        self.client.post(setup_url, data=td.supervisor_2_data)
         setup_url = reverse('course-list')
         self.client.post(setup_url, data=td.course_1_data)
         setup_url = reverse('subscription-list')
@@ -308,4 +309,46 @@ class AdvancedTestCase(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.data['total_money_earned'], td.payment_1_data['value'])
         self.assertEqual(response.data['balance'], 2.5)
+
+
+        """
+        Create Free Training and attendance to test features
+
+         1. Attendance without subscription is considered in balance calculation of member
+         2. Free Training is considered with secondary_wage for amount_due of supervisor
+
+         3. Attendance is NOT automatically generated even if subscription exists.
+         4. No two supervisors are allowed for free-training
+
+        """
+
+        # Generate free training course + date + attendance
+        url = reverse('course-list')
+        response = self.client.post(url, td.course_2_data)
+        url = reverse('subscription-list')
+        response = self.client.post(url, td.subscription_4_data)
+        url = reverse('specificdate-list')
+        response = self.client.post(url, td.specificdate_4_data)
+
+        # Implicit: No day_of_week check is performed (i.e. no error thrown because of wrong date)
+        # No Attendance is automatically generated
+        self.assertEqual(response.data['attendees'], [])
+
+        url = reverse('attendance-list')
+        response = self.client.post(url, td.attendance_2_data)
+
+        # test that free training is considered in balance of member
+        url = reverse('member-detail', kwargs={'pk': 1})
+        response = self.client.get(url)
+        self.assertEqual(response.data['balance'], -203) # -200 - 3 for free Training attendance without sub
+
+        # test that free training is considered in amount_due of supervisor
+        url = reverse('supervisor-detail', kwargs={'pk': 1})
+        response = self.client.get(url)
+        self.assertEqual(response.data['amount_due'], 2.5 * 15 + 4*10) #2,5 h course at 15€ and 4h at 10€
+
+        # Too many supervisors results in error message
+        url = reverse('specificdate-detail', kwargs={'pk': 2})
+        response = self.client.patch(url, td.specificdate_4_patch)
+        self.assertEqual(response.data['non_field_errors'], [gs.TOO_MANY_SUPERVISORS_FREE_TRAINING])
 
