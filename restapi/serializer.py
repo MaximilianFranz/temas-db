@@ -373,6 +373,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                                           note=gs.AUTO_ADD_WAITINGLIST_NOTE)
             raise serializers.ValidationError(gs.COURSE_FULL)
 
+        # Check that start Date is before end date
+        if data['start_date'] >= data['end_date']:
+            raise serializers.ValidationError(gs.START_AFTER_END)
+
+
         # check for conflicting subscriptions of this member on this course
         # Imagine a timeline with two intervals representing the dates
         # A conflict then is either if A-start is in between B-start and B-end or
@@ -396,8 +401,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                     models.Q(end_date__gte=data['start_date']) |
                     models.Q(start_date__lte=data['end_date']) &
                     models.Q(end_date__gte=data['end_date'])).count()
-
-
 
         if conflict_count is not 0:
             raise serializers.ValidationError(gs.SUBSCRIPTION_CONFLICT)
@@ -428,6 +431,7 @@ class WaitingDetailsSerializer(serializers.ModelSerializer):
     member = MemberField(queryset=Member.objects.all())
 
     class Meta:
+        depth = 0
         model = WaitingDetails
         fields = ('id', 'member', 'course', 'waiting_since', 'note')
 
