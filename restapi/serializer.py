@@ -60,7 +60,8 @@ class MemberSerializer(serializers.ModelSerializer):
                   'attended_dates',
                   'balance',
                   'percentage_attended',
-                  'last_payment_date')
+                  'last_payment_date',
+                  'attended_last_4_dates')
 
 
 class IDCardSerializer(serializers.ModelSerializer):
@@ -323,6 +324,7 @@ class CourseSerializer(serializers.ModelSerializer):
                   'supervisor',
                   'department',
                   'members',
+                  'waiting_list',
                   'eventtype',
                   'start_time',
                   'end_time',
@@ -333,6 +335,7 @@ class CourseSerializer(serializers.ModelSerializer):
                   'balance',
                   'avg_attendance',
                   'max_attendees',
+                  'size_of_waitinglist'
                   )
 
     def get_members(self, obj):
@@ -358,7 +361,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('course', 'member', 'start_date', 'end_date',
+        fields = ('id', 'course', 'member', 'start_date', 'end_date',
                   'value', 'accumulated_value', 'length', 'active')
 
     def validate(self, data):

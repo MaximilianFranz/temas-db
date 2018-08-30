@@ -86,7 +86,6 @@ class Member(models.Model):
             if not has_sub:
                 balance += -3
 
-
         return balance
 
     def colides(self, date, sub):
@@ -130,6 +129,29 @@ class Member(models.Model):
             return last_payment.date
         else:
             return datetime.date.min
+
+    @property
+    def attended_last_4_dates(self):
+        return self.member_attended_past_x_dates(4)
+
+    def member_attended_past_x_dates(self, number_of_dates):
+        """
+        When subscribed to a normal course, this shows whether a member was absent more than 4 times in a row.
+        :return:
+        """
+        active_course_subscriptions = self.subscriptions.all().exclude(course__eventtype=1)\
+            .filter(models.Q(end_date__isnull=True) |
+                    models.Q(end_date__gte=datetime.date.today()))
+        for sub in active_course_subscriptions:
+            course = sub.course
+            last_dates = course.get_last_dates(number_of_dates)
+            for date in last_dates:
+                if self not in date.attendees.all():
+                    return False
+
+        return True
+
+        pass
 
     def critical(self, critical_number):
         """
@@ -313,6 +335,20 @@ class Course(models.Model):
 
         return attendance_sum / count
 
+    @property
+    def size_of_waitinglist(self):
+        count = self.waiting_list.all().count()
+        if count is None:
+            return 0
+        return count
+
+    def get_last_dates(self, number_of_dates ):
+        """
+
+        :param number_of_dates: last 'number_of_dates' dates are to be returned
+        :return: queryset containing the last x dates of this course
+        """
+        return self.dates.all().order_by('-date')[:number_of_dates]
 
     def save(self, *args, **kwargs):
         """
@@ -475,9 +511,9 @@ class WaitingDetails(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='waiting_for')
     # Doesn't have to wait for a specific course
     course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True, related_name='waiting_list')
+    # e.g. write in note for which courses member is potentially waiting.
     note = models.TextField(help_text='Additional info about the waiting list entry', blank=True, null=True)
-    waiting_since = models.DateField(default=datetime.date.today, help_text="since when the member is waiting")
-
+    waiting_since = models.DateField(default=datetime.date.today, help_text="since when the member is waiting", null=True, blank=True)
 
 class ExtraHours(models.Model):
     supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.CASCADE, related_name='extra_hours')
