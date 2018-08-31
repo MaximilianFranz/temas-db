@@ -374,7 +374,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(gs.COURSE_FULL)
 
         # Check that start Date is before end date
-        if data['start_date'] >= data['end_date']:
+        if 'end_date' in data and data['start_date'] >= data['end_date']:
             raise serializers.ValidationError(gs.START_AFTER_END)
 
 
