@@ -9,6 +9,7 @@ from django.db import models
 
 from restapi import global_settings as gs
 
+
 # ----------------------------------
 # Custom Fields
 # ----------------------------------
@@ -33,7 +34,8 @@ class MemberField(serializers.PrimaryKeyRelatedField):
         if queryset is None:
             return {}
 
-        return collections.OrderedDict([(item.id, str(item)) for item in queryset])
+        return collections.OrderedDict(
+            [(item.id, str(item)) for item in queryset])
 
 
 # ----------------------------------
@@ -60,11 +62,11 @@ class SupervisorField(serializers.PrimaryKeyRelatedField):
         if queryset is None:
             return {}
 
-        return collections.OrderedDict([(item.id, str(item)) for item in queryset])
+        return collections.OrderedDict(
+            [(item.id, str(item)) for item in queryset])
 
 
 class MemberSerializer(serializers.ModelSerializer):
-
     birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     class Meta:
@@ -89,7 +91,6 @@ class MemberSerializer(serializers.ModelSerializer):
 
 
 class SpecificDateSerializer(serializers.ModelSerializer):
-
     attendees = serializers.SerializerMethodField()
     date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
@@ -124,7 +125,8 @@ class SpecificDateSerializer(serializers.ModelSerializer):
             course = validated_data['course']
             validated_data['supervisor'] = course.supervisor.all()
 
-        specific_date = super(SpecificDateSerializer, self).create(validated_data)
+        specific_date = super(SpecificDateSerializer, self).create(
+            validated_data)
 
         return specific_date
 
@@ -144,7 +146,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         # clean out obsolete attendance objects
         # TODO: Delete when no ACTIVE subscription at this date
         for attendance in obj.attendance_set.all():
-            if not Subscription.objects.all().\
+            if not Subscription.objects.all(). \
                     filter(member=attendance.member,
                            course=attendance.date.course).exists():
 
@@ -182,14 +184,12 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
 
 class SupervisorSerializer(serializers.ModelSerializer):
-
     birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     # required user fields
     username = serializers.CharField(source='user.username')
     email = serializers.EmailField(source='user.email')
     password = serializers.CharField(source='user.password', write_only=True)
-
 
     class Meta:
         model = SupervisorProfile
@@ -218,10 +218,10 @@ class SupervisorSerializer(serializers.ModelSerializer):
         related_fields = ['user']
         # make all FK fields read_only
         extra_kwargs = {
-                        'courses' : {'read_only' : True},
-                        'department' : {'read_only' : True},
-                        'supervised_dates' : {'read_only' : True}
-                        }
+            'courses': {'read_only': True},
+            'department': {'read_only': True},
+            'supervised_dates': {'read_only': True}
+        }
 
     def update(self, instance, validated_data):
         """Overwrite update() to set related user instance values"""
@@ -238,12 +238,13 @@ class SupervisorSerializer(serializers.ModelSerializer):
         # pre-save to generate the full user instance
         instance.save()
         validated_data['user'] = instance.user
-        return super(SupervisorSerializer, self).update(instance, validated_data)
+        return super(SupervisorSerializer, self).update(instance,
+                                                        validated_data)
 
     def create(self, validated_data):
         """Manually generate user instance to be added to the one-2-one field"""
-        userdata = {'email' : validated_data['user'].pop('email'),
-                  'username' : validated_data['user'].pop('username'),}
+        userdata = {'email': validated_data['user'].pop('email'),
+                    'username': validated_data['user'].pop('username'), }
         user = User.objects.create(**userdata)
 
         # stores a salted hash of the password
@@ -256,7 +257,6 @@ class SupervisorSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     """
     Custom User serializer to support all fields in supervisor profile natively
     """
@@ -280,8 +280,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-
-    supervisor = SupervisorField(queryset=SupervisorProfile.objects.all(), many=True)
+    supervisor = SupervisorField(queryset=SupervisorProfile.objects.all(),
+                                 many=True)
 
     members = serializers.SerializerMethodField(read_only=True)
 
@@ -318,8 +318,8 @@ class CourseSerializer(serializers.ModelSerializer):
         """
         active_subscriptions = Subscription.objects.filter(
             models.Q(course=obj.pk)
-            & (models.Q(end_date__isnull = True)
-            | models.Q(end_date__gte = datetime.date.today()))
+            & (models.Q(end_date__isnull=True)
+               | models.Q(end_date__gte=datetime.date.today()))
         )
 
         members = Member.objects.filter(subscriptions__in=active_subscriptions)
@@ -328,7 +328,6 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-
     start_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
     end_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
@@ -357,7 +356,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         """
         # note that number_of_participants refers to the number,
         # before this one is added thus use greater or equal
-        if data['course'].number_of_participants >= data['course'].max_attendees:
+        if data['course'].number_of_participants >= data[
+            'course'].max_attendees:
             WaitingDetails.objects.create(member=data['member'],
                                           course=data['course'],
                                           note=gs.AUTO_ADD_WAITINGLIST_NOTE)
@@ -372,17 +372,17 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         # B-end or if A-end is between B-start and B-end or if neither A or B
         # have an end
         if 'end_date' not in data:
-            conflict_count = Subscription.objects.all().\
-                filter(member=data['member'].id).\
-                filter(course=data['course'].id).\
+            conflict_count = Subscription.objects.all(). \
+                filter(member=data['member'].id). \
+                filter(course=data['course'].id). \
                 filter(models.Q(start_date__lte=data['start_date'])
                        & models.Q(end_date__gte=data['start_date'])
                        | models.Q(end_date__isnull=True)
                        ).count()
         else:
-            conflict_count = Subscription.objects.all().\
-                filter(member=data['member'].id).\
-                filter(course=data['course'].id).\
+            conflict_count = Subscription.objects.all(). \
+                filter(member=data['member'].id). \
+                filter(course=data['course'].id). \
                 filter(models.Q(start_date__lte=data['start_date'])
                        & models.Q(end_date__gte=data['start_date'])
                        | models.Q(start_date__lte=data['end_date'])
@@ -399,16 +399,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 # ----------------------------------
 
 class PaymentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Payment
         fields = ('id', 'member', 'course', 'date', 'value')
 
 
 class SupervisorPaymentSerializer(serializers.ModelSerializer):
-
     supervisor = SupervisorField(queryset=SupervisorProfile.objects.all())
-
 
     class Meta:
         model = SupervisorPayment
@@ -416,7 +413,6 @@ class SupervisorPaymentSerializer(serializers.ModelSerializer):
 
 
 class WaitingDetailsSerializer(serializers.ModelSerializer):
-
     member = MemberField(queryset=Member.objects.all())
 
     class Meta:
@@ -424,13 +420,13 @@ class WaitingDetailsSerializer(serializers.ModelSerializer):
         model = WaitingDetails
         fields = ('id', 'member', 'course', 'waiting_since', 'note')
 
-class ExtraHoursSerializer(serializers.ModelSerializer):
 
+class ExtraHoursSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtraHours
         fields = '__all__'
         extra_kwargs = {
-            'time_in_hours' : {'read_only' : True},
+            'time_in_hours': {'read_only': True},
         }
 
 
@@ -446,7 +442,6 @@ class IDCardSerializer(serializers.ModelSerializer):
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
-
     member = MemberField(many=False, queryset=Member.objects.all())
 
     class Meta:

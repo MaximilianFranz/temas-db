@@ -40,9 +40,6 @@ DEFAULT_START_TIME = datetime.time(16, 00, 00)
 DEFAULT_END_TIME = datetime.time(17, 30, 00)
 DEFAULT_TIME_IN_HOURS = 1.5
 
-
-
-
 # ----------------------------------
 # Choices
 # ----------------------------------
