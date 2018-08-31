@@ -130,29 +130,37 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
         return specific_date
 
-    def get_attendees(obj):
+    def get_attendees(self, obj):
         """
         Special serializer method field to ensure a SpecificDate
-        always represents the attendees based on the active subscription to
-        the related course
+        always represents the attendees based on the subscription to
+        the related course that were active at the given date
 
         :param obj: the currently serialized instance
         :return: the serialized data for the field attendees
         """
-        for sub in obj.course.subscriptions.all().exclude(course__eventtype=1):
-            if sub.active:
-                Attendance.objects.get_or_create(member=sub.member, date=obj)
+        # Create attendance for based on subscriptions that are active on
+        # this date
+        active_subscriptions = obj.course.subscriptions.all().exclude(
+            course__eventtype=1).filter(
+                            models.Q(start_date__lte=obj.date)
+                            & (models.Q(end_date__isnull=True)
+                                | models.Q(end_date__gte=obj.date)))
+        for sub in active_subscriptions:
+            Attendance.objects.get_or_create(member=sub.member, date=obj)
 
-        # clean out obsolete attendance objects
-        # TODO: Delete when no ACTIVE subscription at this date
+        # clean out obsolete attendance objects where no subscription exists
+        # anymore (i.e. if subscription was deleted)
         for attendance in obj.attendance_set.all():
-            if not Subscription.objects.all(). \
-                    filter(member=attendance.member,
-                           course=attendance.date.course).exists():
 
-                if attendance.date.course.eventtype is not 1:
-                    # No subscription for the course of this
-                    # attendance, thus delete attendance
+            active_subscriptions = obj.course.subscriptions.all().filter(
+                        member=attendance.member).filter(
+                            models.Q(start_date__lte=obj.date)
+                            & (models.Q(end_date__isnull=True)
+                                | models.Q(end_date__gte=obj.date)))
+
+            if obj.course.eventtype is not 1:
+                if not active_subscriptions.exists():
                     attendance.delete()
 
         attendance_set = obj.attendance_set
@@ -329,7 +337,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
-    end_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
+    end_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS,
+                                     required=False)
 
     class Meta:
         model = Subscription
