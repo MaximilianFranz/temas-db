@@ -152,7 +152,6 @@ class Member(models.Model):
         return self.member_attended_past_x_dates(4)
 
     def member_attended_past_x_dates(self, number_of_dates):
-        # TODO : TEST THIS! it is NOT correct as of now
         """
         When subscribed to a normal course, this shows whether a member was
         absent more than 'number_of_dates' dates in a row.
@@ -168,7 +167,10 @@ class Member(models.Model):
             course = sub.course
             last_dates = course.get_last_dates(number_of_dates)
             for date in last_dates:
-                if self not in date.attendees.all():
+                attended_members = date.attendees.all().filter(
+                    attendance__status=2)
+
+                if self not in attended_members:
                     return False
 
         return True
@@ -318,7 +320,6 @@ class Course(models.Model):
                                         help_text='maximum number of members '
                                                   'that can subscribe')
 
-    # TODO : Refactor default times clean!
     start_time = models.TimeField(default=gs.DEFAULT_START_TIME)
     end_time = models.TimeField(default=gs.DEFAULT_END_TIME)
     time_in_hours = models.DecimalField(max_digits=3,
@@ -471,7 +472,8 @@ class SpecificDate(models.Model):
         """
         Override save() to:
         1. fill fields from related course if not stated otherwise
-        2. create Attendance based on subscription
+        2. create Attendance based on subscription that were active on this
+        date or will be active on this date
 
         Note: Supervision is managed in Serialzer create(),
         since manipulation m2m relationships in here is not viable.
@@ -492,10 +494,15 @@ class SpecificDate(models.Model):
                 Decimal(self.end_time.hour - self.start_time.hour +
                         (self.end_time.minute - self.start_time.minute) / 60)
 
-        # TODO: Fix. This should return subscriptions that were active on the specificDate date.
         active_course_subcriptions = self.course.subscriptions.all().filter(
-            models.Q(end_date__isnull=True)
-            | models.Q( end_date__gte=datetime.date.today()))
+            models.Q(start_date__lte=self.date)
+            & (models.Q(end_date__isnull=True)
+               | models.Q(end_date__gte=self.date))
+        )
+
+        # active_course_subcriptions = self.course.subscriptions.all().filter(
+        #     models.Q(end_date__isnull=True)
+        #     | models.Q( end_date__gte=datetime.date.today()))
 
         if self.course.eventtype is not 1:
             # auto-generate attendance for Courses that are not 'free-training'
@@ -672,7 +679,8 @@ class ExtraHours(models.Model):
                                                 'used',
                                       null=True, blank=True)
 
-    note = models.TextField(help_text='Note on the reason or content of the extra work',
+    note = models.TextField(help_text='Note on the reason or '
+                                      'content of the extra work',
                             null=True, blank=True)
 
     def save(self, *args, **kwargs):

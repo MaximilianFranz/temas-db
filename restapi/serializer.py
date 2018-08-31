@@ -140,7 +140,9 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         :return: the serialized data for the field attendees
         """
         # Create attendance for based on subscriptions that are active on
-        # this date
+        # this date.
+        # Also Done in models save() method, but only on creation,
+        # so if subscriptions are added afterwards they might not be considered.
         active_subscriptions = obj.course.subscriptions.all().exclude(
             course__eventtype=1).filter(
                             models.Q(start_date__lte=obj.date)
@@ -352,6 +354,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                   'accumulated_value',
                   'length',
                   'active')
+
 
     def validate(self, data):
         """
