@@ -73,7 +73,8 @@ class Member(models.Model):
         :return:
         """
         balance = self.payments.all().aggregate(payed=models.Sum('value')).get('payed')
-        subscriptions = self.subscriptions.all()
+        subscriptions = self.subscriptions.all().filter(
+            start_date__lte=datetime.date.today())
 
         if balance is None:
             # If balance is NoneType make it 0
