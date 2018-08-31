@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import  UniqueForMonthValidator
 from django.contrib.auth.models import User
 from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance, WaitingDetails
-from restapi.models import Department, Course, Subscription, Payment, SupervisorPayment, ExtraHours
+from restapi.models import Course, Subscription, Payment, SupervisorPayment, ExtraHours
 import collections
 from django.db import models
 import datetime
@@ -278,39 +278,9 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined',)
 
 
-class DepartmentField(serializers.PrimaryKeyRelatedField):
-    """
-    Custom Field for Department to allow nested representation and update by PK
-    """
-
-    def to_representation(self, value):
-        pk = super(DepartmentField, self).to_representation(value)
-        try:
-            item = Department.objects.get(pk=pk)
-            serializer = DepartmentSerializer(item)
-            return serializer.data
-        except Department.DoesNotExist:
-            return None
-
-    def get_choices(self, cutoff=None):
-        queryset = self.get_queryset()
-        if queryset is None:
-            return {}
-
-        return collections.OrderedDict([(item.id, str(item)) for item in queryset])
-
-
-class DepartmentSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Department
-        fields = ('id', 'name', 'courses', 'supervisors')
-
-
 class CourseSerializer(serializers.ModelSerializer):
 
     supervisor = SupervisorField(queryset=SupervisorProfile.objects.all(), many=True)
-    department = DepartmentField(queryset=Department.objects.all())
 
     # Lists full fledge member serialization of all members ignoring the subscription 'through-model'
     # For low-prio mode courses there is no subcription and thus no members to be listed.

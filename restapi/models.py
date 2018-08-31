@@ -174,10 +174,6 @@ class Member(models.Model):
         return True
 
 
-class Department(models.Model):
-    name = models.CharField(max_length=50)
-
-
 class SupervisorProfile(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -200,11 +196,9 @@ class SupervisorProfile(models.Model):
     banking_info = models.TextField(
         help_text="banking information of the supervisor to pay")
 
-    department = models.ForeignKey(Department,
-                                   on_delete=models.CASCADE,
-                                   related_name='supervisors',
-                                   blank=True,
-                                   null=True)
+    department = models.IntegerField(choices=gs.DEPARTMENTS,
+                                     blank=True,
+                                     null=True)
 
     # The SupervisorProfile is a sort of facade or add-on to the User model
     # as it provides exentsive and specific detail for our case but still
@@ -311,10 +305,9 @@ class Course(models.Model):
                                         related_name='courses',
                                         blank=True, null=True)
 
-    department = models.ForeignKey(Department,
-                                   on_delete=models.CASCADE,
-                                   related_name='courses',
-                                   blank=True, null=True)
+    department = models.IntegerField(choices=gs.DEPARTMENTS,
+                                     blank=True,
+                                     null=True)
 
     eventtype = models.IntegerField(choices=gs.EVENT_TYPES,
                                     max_length=1,

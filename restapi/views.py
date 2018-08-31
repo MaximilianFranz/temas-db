@@ -73,20 +73,6 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 #
 # ==================================
 
-class DepartmentList(generics.ListCreateAPIView):
-    queryset = Department.objects.all()
-    serializer_class = DepartmentSerializer
-
-
-class DepartmentDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Department.objects.all()
-    serializer_class = DepartmentSerializer
-
-
-# ==================================
-#
-# ==================================
-
 class CourseList(generics.ListCreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
