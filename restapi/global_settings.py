@@ -22,7 +22,7 @@ WRONG_PASSWORD = "Wrong password, use same password on edit to confirm"
 
 DATE_NOT_ON_WEEKDAY = 'Date is not on the weekday of this course'
 
-TOO_MANY_SUPERVISORS_FREE_TRAINING = 'Only one supervisor per Free-Training is allowed'
+TOO_MANY_SUPERVISROS = 'Only one supervisor per Free-Training is allowed'
 
 START_AFTER_END = 'Start Date cannot be after the End Date for a subscription'
 
@@ -67,3 +67,11 @@ ATTENDANCE_STATUS = ((0, 'not specified'),
                      (1, 'excused'),
                      (2, 'attended'),
                      (3, 'not attended'))
+
+# Valid Date input formats accepted by serializers
+# Last two for month fields implicity set day to 1
+DATE_INPUT_FORMATS = ['%Y-%m-%d',
+                      '%d-%m-%Y',
+                      '%d-%m-%Y %H:%M',
+                      '%Y-%m', '%m-%Y']
+

@@ -338,5 +338,5 @@ class AdvancedTestCase(APITestCase):
         # Too many supervisors results in error message
         url = reverse('specificdate-detail', kwargs={'pk': 2})
         response = self.client.patch(url, td.specificdate_4_patch)
-        self.assertEqual(response.data['non_field_errors'], [gs.TOO_MANY_SUPERVISORS_FREE_TRAINING])
+        self.assertEqual(response.data['non_field_errors'], [gs.TOO_MANY_SUPERVISROS])
 
