@@ -4,8 +4,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase
-from restapi.models import Department, IDCard, SupervisorProfile
-from restapi.views import DepartmentList
+from restapi.models import *
 from . import test_data as td
 from .. import global_settings as gs
 from freezegun import freeze_time
@@ -48,8 +47,7 @@ class SupervisorTestCase(APITestCase):
     data = td.supervisor_1_data
 
     def setUp(self):
-        d = Department(name='TestDepartment')
-        d.save()
+        pass
 
     def test_supervisor_endpoint(self):
 
@@ -79,8 +77,7 @@ class SupervisorTestCase(APITestCase):
 class CourseTestCase(APITestCase):
 
     def setUp(self):
-        d = Department(name='TestDepartment')
-        d.save()
+        pass
 
         setup_url = reverse('supervisor-list')
         response = self.client.post(setup_url, data=td.supervisor_1_data)
@@ -133,9 +130,6 @@ class SubscriptionTestCase(APITestCase):
     """
 
     def setUp(self):
-        d = Department(name='TestDepartment')
-        d.save()
-
         setup_url = reverse('member-list')
         self.client.post(setup_url, data=td.member_1_data)
         setup_url = reverse('supervisor-list')
@@ -178,9 +172,6 @@ class SpecificDateTestCase(APITestCase):
     """
 
     def setUp(self):
-        d = Department(name='TestDepartment')
-        d.save()
-
         setup_url = reverse('member-list')
         self.client.post(setup_url, data=td.member_1_data)
         setup_url = reverse('supervisor-list')
@@ -225,9 +216,6 @@ class AdvancedTestCase(APITestCase):
     """
 
     def setUp(self):
-        d = Department(name='TestDepartment')
-        d.save()
-
         setup_url = reverse('member-list')
         self.client.post(setup_url, data=td.member_1_data)
         setup_url = reverse('supervisor-list')

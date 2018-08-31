@@ -8,7 +8,7 @@ supervisor_1_data = {
     'last_name': 'Mustermann',
     'address': 'Some Address of home',
     'birthday': '15-05-1996',
-    'department': 1,
+    'department': 0,
     'courses': [],
     'username': 'testuser',
     'email': 'mail@mail.com',
@@ -22,7 +22,7 @@ supervisor_2_data = {
     'last_name': 'Stadtrand',
     'address': 'Some Address of home',
     'birthday': '15-05-1994',
-    'department': 1,
+    'department': 0,
     'courses': [],
     'username': 'otheruser',
     'email': 'mail@mail.com',
@@ -36,7 +36,7 @@ course_1_data = {
     'day_of_week': 0,
     'supervisor': [1],
     'start_time': '15:00',
-    'department': 1,
+    'department': 0,
     'max_attendees': 15
 }
 
@@ -46,7 +46,7 @@ course_2_data = {
     'eventtype': 1,
     'start_time': '18:00',
     'end_time': '22:00',
-    'department': 1,
+    'department': 0,
     'max_attendees': 100
 }
 
