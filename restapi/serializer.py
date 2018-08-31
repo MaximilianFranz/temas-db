@@ -1,14 +1,12 @@
-from rest_framework import serializers
-from rest_framework.validators import  UniqueForMonthValidator
-from django.contrib.auth.models import User
-from restapi.models import Member, IDCard, SpecificDate, SupervisorProfile, Attendance, WaitingDetails
-from restapi.models import Course, Subscription, Payment, SupervisorPayment, ExtraHours
-import collections
-from django.db import models
-import datetime
+"""Contains Serializers according to Django Rest Framework architecture"""
 
-# import settings for global constants
-from temas_db import settings
+import datetime
+import collections
+
+from rest_framework import serializers
+from restapi.models import *
+from django.db import models
+
 from restapi import global_settings as gs
 
 # ----------------------------------
@@ -67,7 +65,7 @@ class SupervisorField(serializers.PrimaryKeyRelatedField):
 
 class MemberSerializer(serializers.ModelSerializer):
 
-    birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
+    birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     class Meta:
         model = Member
@@ -93,7 +91,7 @@ class MemberSerializer(serializers.ModelSerializer):
 class SpecificDateSerializer(serializers.ModelSerializer):
 
     attendees = serializers.SerializerMethodField()
-    date = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
+    date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     class Meta:
         model = SpecificDate
@@ -185,7 +183,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
 class SupervisorSerializer(serializers.ModelSerializer):
 
-    birthday = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
+    birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     # required user fields
     username = serializers.CharField(source='user.username')
@@ -331,8 +329,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(serializers.ModelSerializer):
 
-    start_date = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
-    end_date = serializers.DateField(input_formats=settings.DATE_INPUT_FORMATS)
+    start_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
+    end_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     class Meta:
         model = Subscription
