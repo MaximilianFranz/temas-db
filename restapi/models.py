@@ -211,6 +211,8 @@ class SupervisorProfile(models.Model):
                                 default=None,
                                 related_name='supervisor_profile')
 
+    is_admin = models.BooleanField(default=False)
+
     @property
     def last_payment_date(self):
         """

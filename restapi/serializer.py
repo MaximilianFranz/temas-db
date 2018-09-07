@@ -212,6 +212,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
                   'wage',
                   'secondary_wage',
                   'banking_info',
+                  'is_admin',
                   # user model
                   'username',
                   'email',
