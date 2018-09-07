@@ -1,4 +1,6 @@
 from django.conf.urls import url
+from django.urls import path
+from django.contrib import admin
 from restapi import views
 
 from rest_framework.urlpatterns import format_suffix_patterns
@@ -7,6 +9,7 @@ from rest_framework.authtoken import views as rest_framework_views
 # TODO: Replace pattern matching with django short cuts for that
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     url(r'^members/$', views.MemberList.as_view(), name='member-list'),
     url(r'^members/(?P<pk>[0-9]+)/$', views.MemberDetail.as_view(), name='member-detail'),
     url(r'^dates/$', views.SpecificDateList.as_view(), name='specificdate-list'),

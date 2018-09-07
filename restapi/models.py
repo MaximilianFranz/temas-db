@@ -213,6 +213,9 @@ class SupervisorProfile(models.Model):
 
     is_admin = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.first_name + " " + self.last_name
+
     @property
     def last_payment_date(self):
         """
@@ -452,7 +455,7 @@ class SpecificDate(models.Model):
 
     def __str__(self):
         """String representation for internal use"""
-        return self.course.name + " am " + str(self.date)
+        return self.course.name + " on " + str(self.date)
 
     class Meta:
         """Defines unique fields to avoid duplicates"""
@@ -618,6 +621,10 @@ class Payment(models.Model):
     date = models.DateField(default=datetime.date.today)
     value = models.DecimalField(decimal_places=2, max_digits=5)
 
+    def __str__(self):
+        return "Payment: " + str(self.member) + " " + str(self.value) + " for " \
+               + str(self.course)
+
 
 class SupervisorPayment(models.Model):
     supervisor = models.ForeignKey(SupervisorProfile,
@@ -635,6 +642,9 @@ class SupervisorPayment(models.Model):
 
     note = models.TextField(help_text="Additional notes regarding the payment",
                             blank=True, null=True)
+
+    def __str__(self):
+        return self.supervisor + "; " + self.value + " on " + self.date
 
 
 class WaitingDetails(models.Model):
