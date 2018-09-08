@@ -410,12 +410,24 @@ class Course(models.Model):
             return 0
         return count
 
-    def get_last_dates(self, number_of_dates ):
+    def get_last_dates(self, number_of_dates=4):
         """
         :param number_of_dates: last 'number_of_dates' dates are to be returned
         :return: queryset containing the last x dates of this course
         """
         return self.dates.all().order_by('-date')[:number_of_dates]
+
+    def get_members(self):
+        """
+        Return Members currently subscribed to this course, ordered by
+        name
+        """
+
+        active_subscriptions = self.subscriptions.all().filter(
+            models.Q(end_date__isnull=True)
+            | models.Q(end_date__gte=datetime.date.today()))
+
+        return Member.objects.filter(subscriptions__in=active_subscriptions)
 
     def save(self, *args, **kwargs):
         """

@@ -327,13 +327,7 @@ class CourseSerializer(serializers.ModelSerializer):
         :param obj: the instance of this Course model
         :return: serialized data for the field members
         """
-        active_subscriptions = Subscription.objects.filter(
-            models.Q(course=obj.pk)
-            & (models.Q(end_date__isnull=True)
-               | models.Q(end_date__gte=datetime.date.today()))
-        )
-
-        members = Member.objects.filter(subscriptions__in=active_subscriptions)
+        members = obj.get_members()
         serializer = MemberSerializer(members, many=True)
         return serializer.data
 
