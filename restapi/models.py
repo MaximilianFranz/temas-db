@@ -531,6 +531,45 @@ class SpecificDate(models.Model):
 
         super(SpecificDate, self).save()
 
+    def get_attendees(self):
+        """
+        Special Method that ensures that only attendance objects exist for this
+        date if there is an active subscription. This is achieved by
+        rechecking every time the attendees are queried.
+        Example: It could happen that an attendance is auto-created based on a
+        subscription, which is then later deleted or shortened (i.e. canceled)
+        so that the attendance object is obsolete.
+
+        :return: Attendees of this date based on active subcriptions
+        """
+
+        # Create attendance for this date based on subscriptions that are active on
+        # this date.
+        active_subscriptions = self.course.subscriptions.all().exclude(
+            course__eventtype=1).filter(
+                            models.Q(start_date__lte=self.date)
+                            & (models.Q(end_date__isnull=True)
+                                | models.Q(end_date__gte=self.date)))
+
+        for sub in active_subscriptions:
+            Attendance.objects.get_or_create(member=sub.member, date=self)
+
+        # Clean out obsolete attendance objects
+        for attendance in self.attendance_set.all():
+
+            active_subscriptions = self.course.subscriptions.all().filter(
+                        member=attendance.member).filter(
+                            models.Q(start_date__lte=self.date)
+                            & (models.Q(end_date__isnull=True)
+                                | models.Q(end_date__gte=self.date)))
+
+            if self.course.eventtype is not 1:
+                if not active_subscriptions.exists():
+                    attendance.delete()
+
+        return self.attendance_set.all()
+
+
 
 class Attendance(models.Model):
     member = models.ForeignKey(Member,

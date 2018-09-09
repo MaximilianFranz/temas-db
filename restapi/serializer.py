@@ -132,42 +132,11 @@ class SpecificDateSerializer(serializers.ModelSerializer):
 
     def get_attendees(self, obj):
         """
-        Special serializer method field to ensure a SpecificDate
-        always represents the attendees based on the subscription to
-        the related course that were active at the given date
-
         :param obj: the currently serialized instance
         :return: the serialized data for the field attendees
         """
-        # Create attendance for based on subscriptions that are active on
-        # this date.
-        # Also Done in models save() method, but only on creation,
-        # so if subscriptions are added afterwards they might not be considered.
-        active_subscriptions = obj.course.subscriptions.all().exclude(
-            course__eventtype=1).filter(
-                            models.Q(start_date__lte=obj.date)
-                            & (models.Q(end_date__isnull=True)
-                                | models.Q(end_date__gte=obj.date)))
-        for sub in active_subscriptions:
-            Attendance.objects.get_or_create(member=sub.member, date=obj)
-
-        # clean out obsolete attendance objects where no subscription exists
-        # anymore (i.e. if subscription was deleted)
-        for attendance in obj.attendance_set.all():
-
-            active_subscriptions = obj.course.subscriptions.all().filter(
-                        member=attendance.member).filter(
-                            models.Q(start_date__lte=obj.date)
-                            & (models.Q(end_date__isnull=True)
-                                | models.Q(end_date__gte=obj.date)))
-
-            if obj.course.eventtype is not 1:
-                if not active_subscriptions.exists():
-                    attendance.delete()
-
-        attendance_set = obj.attendance_set
+        attendance_set = obj.get_attendees()
         serializer = AttendanceSerializer(attendance_set, many=True)
-
         return serializer.data
 
     def validate(self, data):
