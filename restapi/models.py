@@ -176,6 +176,9 @@ class Member(models.Model):
 
         return True
 
+    def get_last_payments(self):
+        return self.payments.all().order_by('-date')[:12]
+
 
 class SupervisorProfile(models.Model):
     first_name = models.CharField(max_length=50)
@@ -287,19 +290,14 @@ class SupervisorProfile(models.Model):
         if amount_payed is None:
             amount_payed = 0
 
-        return amount_payed
+        return round(amount_payed, 2)
 
-DAYS_OF_WEEK = ((0, 'Monday'),
-                (1, 'Tuesday'),
-                (2, 'Wednesday'),
-                (3, 'Thursday'),
-                (4, 'Friday'),
-                (5, 'Saturday'),
-                (6, 'Sunday')
-                )
 
-EVENT_TYPES = ((0, 'Course'),
-               (1, 'Free Training'))
+    def get_last_payments(self):
+        """
+        :return: last four payments to this supervisor
+        """
+        return self.payments.all().order_by('-date')[:4]
 
 
 class Course(models.Model):
@@ -427,7 +425,8 @@ class Course(models.Model):
             models.Q(end_date__isnull=True)
             | models.Q(end_date__gte=datetime.date.today()))
 
-        return Member.objects.filter(subscriptions__in=active_subscriptions)
+        return Member.objects.filter(subscriptions__in=active_subscriptions)\
+            .order_by('last_name')
 
     def save(self, *args, **kwargs):
         """
