@@ -1,0 +1,44 @@
+{% extends "overview/base.html" %}
+
+
+  {% block content %}
+
+  <h2>All Courses</h2>
+  <div class="table-responsive">
+      {% block table %}
+
+
+    <table class="table table-striped" >
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th># of Participants</th>
+        <th>Maximum # of Participants</th>
+        <th>Balance</th>
+        <th>Size of Waiting List</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for course in course_list %}
+      <tr >
+        <td>{{course.id}}</td>
+        <td><a href="{% url 'course-detail-overview' course.id %}" >{{ course.name }}</a></td>
+        <td>{{course.start_time}}</td>
+        <td>{{course.end_time}}</td>
+        <td>{{course.number_of_participants}}</td>
+        <td>{{course.max_attendees}}</td>
+        <td>{{course.balance}}</td>
+        <td>{{course.size_of_waitinglist}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endblock %}
+
+  </div>
+  {% endblock %}
+
+

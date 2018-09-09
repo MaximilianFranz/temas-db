@@ -1,0 +1,37 @@
+{% extends "overview/base.html" %}
+
+
+  {% block content %}
+
+  <h2 style="display: inline-block">Course Detail : {{ course.name }}</h2>
+  <a href="{% url 'course-detail-finance-overview' course.id %}" class="btn btn-outline-primary">Finance Overview</a>
+  <div class="table-responsive">
+      {% block table %}
+    <table class="table table-striped" >
+      <thead>
+      <tr>
+        <th>Date</th>
+        {% for member in course.get_members %}
+        <th>{{ member.first_name }} {{ member.last_name }}</th>
+        {% endfor %}
+      </tr>
+      </thead>
+      <tbody>
+      {% for date in last_dates %}
+      <tr>
+        <td>{{date.date}}</td>
+        {% for attendance in date.member_attendance%}
+        {% if attendance.member in course.get_members %}
+          <td>{{attendance.status}}</td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endblock %}
+
+  </div>
+  {% endblock %}
+
+

@@ -1,0 +1,64 @@
+{% extends "overview/base.html" %}
+
+
+  {% block content %}
+
+  <h2>Course Finance Detail : {{ course.name }} : {{ course.balance }}€</h2>
+  <div class="container">
+
+    <h3>Supervisors</h3>
+    <div class="row">
+    {% for supervisor in course.supervisor.all %}
+    <div class="col-md">
+      <h4>{{ supervisor.first_name }} {{ supervisor.last_name }} : Amount due: {{ supervisor.amount_due }}€</h4>
+      <ul class="list-group">
+      {% for sup_payment in supervisor.get_last_payments %}
+        <li class="list-group-item">{{sup_payment.date}} {{sup_payment.value}}</li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+    <hr/>
+    <h3>Members</h3>
+    {% for member in course.get_members %}
+      <p>{{member.first_name}} {{member.last_name}} : {{member.balance}}€</p>
+      {% if member.get_last_payments|length is not 0 %}
+      <table class="table table-striped" >
+      <thead>
+      <tr>
+        <th>Date</th>
+        {% for payment in member.get_last_payments %}
+        <th>{{ payment.date }}</th>
+        {% endfor %}
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>Value</td>
+        {% for payment in member.get_last_payments %}
+          {% if payment.course.name == course.name %}
+          <td>{{payment.value}}</td>
+          {% else %}
+          <td>N</td>
+          {% endif %}
+
+        {% endfor %}
+      </tr>
+      </tbody>
+    </table>
+    {% else %}
+    <p>No payments made yet</p>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+{% endblock %}
+
+
+
+
+
+
+
+
