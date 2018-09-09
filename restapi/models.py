@@ -101,7 +101,7 @@ class Member(models.Model):
                 # if no subscription for this date exists charge 3€
                 balance -= gs.DEFAULT_ATTENDANCE_COST
 
-        return balance
+        return round(balance, 2)
 
     def colides(self, date, sub):
         """
@@ -133,7 +133,7 @@ class Member(models.Model):
         if number_attended is 0 or total_number is 0:
             return 0
 
-        return number_attended / total_number
+        return round(number_attended / total_number, 2)
 
     @property
     def last_payment_date(self):
@@ -271,7 +271,7 @@ class SupervisorProfile(models.Model):
             extra_hours_amount = 0
 
         total_amount_due += extra_hours_amount
-        return total_amount_due - self.total_amount_payed
+        return round(total_amount_due - self.total_amount_payed, 2)
 
     @property
     def total_amount_payed(self):
@@ -361,7 +361,7 @@ class Course(models.Model):
             # If NoneType replace with 0
             total_value = 0
 
-        return total_value
+        return round(total_value, 2)
 
     @property
     def total_money_spent(self):
@@ -374,7 +374,7 @@ class Course(models.Model):
             for sup in date.supervisor.all():
                 total += date.time_in_hours * sup.wage
 
-        return total
+        return round(total, 2)
 
     @property
     def balance(self):
@@ -398,7 +398,7 @@ class Course(models.Model):
             # Avoid division by zero
             return 0
 
-        return attendance_sum / count
+        return round(attendance_sum / count, 2)
 
     @property
     def size_of_waitinglist(self):
@@ -484,7 +484,7 @@ class SpecificDate(models.Model):
         if number_attended is 0 or total is 0:
             return 0
 
-        return number_attended / total
+        return round(number_attended / total, 2)
 
     def save(self, *args, **kwargs):
         """
@@ -608,10 +608,10 @@ class Subscription(models.Model):
         """
         if self.active:
             delta = datetime.datetime.today().date() - self.start_date
-            return self.value * (delta.days // 30)
+            return round(self.value * (delta.days // 30), 2)
         else:
             delta = self.end_date - self.start_date
-            return self.value * (delta.days // 30)
+            return round(self.value * (delta.days // 30), 2)
 
 
 class Payment(models.Model):
