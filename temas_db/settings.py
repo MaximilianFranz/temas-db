@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'restapi.apps.RestapiConfig',
+    'overview.apps.OverviewConfig',
     'raven.contrib.django.raven_compat',
 
 ]
@@ -118,7 +119,6 @@ INSTALLED_APPS = [
 # }
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -126,6 +126,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 # TODO: Check this under security stand-points once running on pi-server
@@ -137,7 +138,7 @@ ROOT_URLCONF = 'temas_db.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR + "/overview/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -202,3 +203,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+LOGIN_REDIRECT_URL = 'course-list-overview'
+LOGIN_URL = 'login'
