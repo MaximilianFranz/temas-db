@@ -70,7 +70,7 @@ LOGGING = {
 #     'release': raven.fetch_git_sha(os.path.abspath(BASE_DIR)),
 # }
 
-ALLOWED_HOSTS = ['127.0.0.1', '192.168.0.206']
+ALLOWED_HOSTS = ['127.0.0.1', '192.168.0.206', '104.248.16.215', 'nco-temas.tk', 'api.nco-temas.tk']
 
 # MY SETTINGS:
 
