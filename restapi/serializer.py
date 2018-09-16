@@ -288,6 +288,8 @@ class CourseSerializer(serializers.ModelSerializer):
                   'size_of_waitinglist'
                   )
 
+        read_only_fields = ('waiting_list')
+
     def get_members(self, obj):
         """
         Returns current members of this course by querying active subscriptions
