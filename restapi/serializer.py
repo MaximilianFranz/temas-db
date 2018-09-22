@@ -197,11 +197,7 @@ class SupervisorSerializer(serializers.ModelSerializer):
 
         related_fields = ['user']
         # make all FK fields read_only
-        extra_kwargs = {
-            'courses': {'read_only': True},
-            'department': {'read_only': True},
-            'supervised_dates': {'read_only': True}
-        }
+        read_only_fields = ('courses', 'department', 'supervised_dates')
 
     def update(self, instance, validated_data):
         """Overwrite update() to set related user instance values"""
@@ -288,7 +284,7 @@ class CourseSerializer(serializers.ModelSerializer):
                   'size_of_waitinglist'
                   )
 
-        read_only_fields = ('waiting_list')
+        read_only_fields = ('waiting_list', )
 
     def get_members(self, obj):
         """
