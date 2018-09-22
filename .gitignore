@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 /static/
+secret.txt
 
 #ignore django local database
 db.sqlite3
