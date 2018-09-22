@@ -302,7 +302,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
     end_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS,
-                                     required=False)
+                                     required=False, allow_null=True)
 
     class Meta:
         model = Subscription
@@ -338,14 +338,15 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(gs.COURSE_FULL)
 
         # Check that start Date is before end date
-        if 'end_date' in data and data['start_date'] >= data['end_date']:
-            raise serializers.ValidationError(gs.START_AFTER_END)
+        if 'end_date' in data and data['end_date'] is not None:
+            if data['start_date'] >= data['end_date']:
+                raise serializers.ValidationError(gs.START_AFTER_END)
 
         # Imagine a timeline with two intervals representing the subscriptions
         # A conflict, then, is either if A-start is in between B-start and
         # B-end or if A-end is between B-start and B-end or if neither A or B
         # have an end
-        if 'end_date' not in data:
+        if 'end_date' not in data or data['end_date'] is None:
             conflict_count = Subscription.objects.all(). \
                 filter(member=data['member'].id). \
                 filter(course=data['course'].id). \
@@ -367,6 +368,74 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
         return super(SubscriptionSerializer, self).validate(data)
 
+
+class SubscriptionSingleSerializer(serializers.ModelSerializer):
+        start_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
+        end_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS,
+                                         required=False, allow_null=True)
+
+        class Meta:
+            model = Subscription
+            fields = ('id',
+                      'course',
+                      'member',
+                      'start_date',
+                      'end_date',
+                      'value',
+                      # property fields
+                      'accumulated_value',
+                      'length',
+                      'active')
+
+        def validate(self, data):
+            """
+            Validates that:
+             1. Course is not full yet
+                if it is, a waiting-list entry is automatically created
+             2. Start date is before end date
+             3. No conflicting subscription exists
+            :param data: to be validated
+            :return: validated data
+            """
+            # note that number_of_participants refers to the number,
+            # before this one is added thus use greater or equal
+            if data['course'].number_of_participants >= data[
+                'course'].max_attendees:
+                WaitingDetails.objects.create(member=data['member'],
+                                              course=data['course'],
+                                              note=gs.AUTO_ADD_WAITINGLIST_NOTE)
+                raise serializers.ValidationError(gs.COURSE_FULL)
+
+            # Check that start Date is before end date
+            if 'end_date' in data and data['end_date'] is not None:
+                if data['start_date'] >= data['end_date']:
+                    raise serializers.ValidationError(gs.START_AFTER_END)
+
+            # Imagine a timeline with two intervals representing the subscriptions
+            # A conflict, then, is either if A-start is in between B-start and
+            # B-end or if A-end is between B-start and B-end or if neither A or B
+            # have an end
+            if 'end_date' not in data or data['end_date'] is None:
+                conflict_count = Subscription.objects.all(). \
+                    filter(member=data['member'].id). \
+                    filter(course=data['course'].id). \
+                    filter(models.Q(start_date__lte=data['start_date'])
+                           & models.Q(end_date__gte=data['start_date'])
+                           | models.Q(end_date__isnull=True)
+                           ).count()
+            else:
+                conflict_count = Subscription.objects.all(). \
+                    filter(member=data['member'].id). \
+                    filter(course=data['course'].id). \
+                    filter(models.Q(start_date__lte=data['start_date'])
+                           & models.Q(end_date__gte=data['start_date'])
+                           | models.Q(start_date__lte=data['end_date'])
+                           & models.Q(end_date__gte=data['end_date'])).count()
+
+            if conflict_count > 1:
+                raise serializers.ValidationError(gs.SUBSCRIPTION_CONFLICT)
+
+            return super(SubscriptionSingleSerializer, self).validate(data)
 
 # ----------------------------------
 # Standard Serializers

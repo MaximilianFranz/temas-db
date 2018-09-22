@@ -108,7 +108,7 @@ class SubscriptionList(generics.ListCreateAPIView):
 
 class SubscriptionDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subscription.objects.all()
-    serializer_class = SubscriptionSerializer
+    serializer_class = SubscriptionSingleSerializer
 
 
 # ==================================
