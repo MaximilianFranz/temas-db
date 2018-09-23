@@ -694,7 +694,7 @@ class SupervisorPayment(models.Model):
                             blank=True, null=True)
 
     def __str__(self):
-        return self.supervisor + "; " + self.value + " on " + self.date
+        return str(self.supervisor) + "; " + str(self.value) + " on " + str(self.date)
 
 
 class WaitingDetails(models.Model):
