@@ -46,6 +46,9 @@ DEFAULT_TIME_IN_HOURS = 1.5
 
 DEPARTMENTS = ((0, 'Parkour'),
                (1, 'Tricking'),
+               (2, 'BJJ'),
+               (3, 'Hort'),
+               (4, 'Misc.'),
                )
 
 DAYS_OF_WEEK = ((0, 'Monday'),
