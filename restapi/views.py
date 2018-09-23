@@ -3,6 +3,8 @@ View Classes providing .as_view() functions for the URL-Routing.
 Order by time of creation.
 """
 
+from rest_framework import filters
+
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes, \
@@ -20,6 +22,10 @@ class MemberList(generics.ListCreateAPIView):
 
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
+    filter_backends = (filters.OrderingFilter, filters.SearchFilter)
+    ordering_fields = ('last_name', 'first_name')
+    ordering = 'last_name'
+    search_fields = ('first_name', 'last_name', 'subscriptions__course')
 
 
 class MemberDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -34,6 +40,8 @@ class MemberDetail(generics.RetrieveUpdateDestroyAPIView):
 class SpecificDateList(generics.ListCreateAPIView):
     queryset = SpecificDate.objects.all()
     serializer_class = SpecificDateSerializer
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('date', 'course__name', 'course__id')
 
 
 class SpecificDateDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -90,7 +98,9 @@ class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
 class PaymentList(generics.ListCreateAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-
+    filter_backends = (filters.OrderingFilter, )
+    ordering_fields = ('value', 'date', 'member')
+    ordering = 'date'
 
 class PaymentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Payment.objects.all()
