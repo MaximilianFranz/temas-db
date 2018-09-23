@@ -6,16 +6,14 @@ PRODUCTION SETTINGS --> MAKE SURE to have secret.txt with your Django secret key
 """
 
 import os
-import raven
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 with open('secret.txt') as f:
     SECRET_KEY = f.read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# The Browseable API is only available in Debug mode and will throw errors otherwise.
+# Also, Static filles are not served in production mode, serve seperately with NGINX
 DEBUG = False
 
 LOGGING = {
@@ -52,13 +50,6 @@ LOGGING = {
             'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'),
         },
     },
-}
-
-RAVEN_CONFIG = {
-    'dsn': 'https://5db556b9fd9e4116b9910a99bbe031df:d4bd7b5bae5747da90084fd434dca2bc@sentry.io/1273162',
-    # If you are using git, you can also automatically configure the
-    # release based on the git info.
-    'release': raven.fetch_git_sha(os.path.abspath(BASE_DIR)),
 }
 
 ALLOWED_HOSTS = ['127.0.0.1', '192.168.0.206', '104.248.16.215', 'nco-temas.tk', 'api.nco-temas.tk']

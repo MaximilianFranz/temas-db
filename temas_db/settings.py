@@ -5,10 +5,13 @@ BASE SETTINGS
 
 """
 
+import os
+import raven
+
 # Import either DEV or PROD settings for deployment sensitive differences.
 
-from ._settings.dev_settings import *
-# from ._settings.prod_settings import *
+from temas_db.dev_settings import *
+# from temas_db.prod_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -59,6 +62,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'temas_db.wsgi.application'
 
+RAVEN_CONFIG = {
+    'dsn': 'https://5db556b9fd9e4116b9910a99bbe031df:d4bd7b5bae5747da90084fd434dca2bc@sentry.io/1273162',
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+    'release': raven.fetch_git_sha(os.path.abspath(BASE_DIR)),
+}
 
 # Database
 DATABASES = {
@@ -94,7 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Berlin'
 
 USE_I18N = True
 
