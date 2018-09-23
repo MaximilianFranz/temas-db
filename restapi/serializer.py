@@ -9,6 +9,10 @@ from django.db import models
 
 from restapi import global_settings as gs
 
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ('id', 'member', 'course', 'date', 'value')
 
 # ----------------------------------
 # Custom Fields
@@ -68,6 +72,7 @@ class SupervisorField(serializers.PrimaryKeyRelatedField):
 
 class MemberSerializer(serializers.ModelSerializer):
     birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
+    payments = serializers.SerializerMethodField()
 
     class Meta:
         model = Member
@@ -83,11 +88,18 @@ class MemberSerializer(serializers.ModelSerializer):
                   'id_card',
                   # FK related fields
                   'attended_dates',
+                  'payments',
                   # property vields
                   'balance',
                   'percentage_attended',
                   'last_payment_date',
                   'attended_last_4_dates')
+
+    def get_payments(self, instance):
+        payments = instance.payments.all().order_by('-date')
+        return PaymentSerializer(payments, many=True).data
+
+
 
 
 class SpecificDateSerializer(serializers.ModelSerializer):
@@ -441,10 +453,7 @@ class SubscriptionSingleSerializer(serializers.ModelSerializer):
 # Standard Serializers
 # ----------------------------------
 
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = ('id', 'member', 'course', 'date', 'value')
+
 
 
 class SupervisorPaymentSerializer(serializers.ModelSerializer):
