@@ -172,7 +172,7 @@ class SpecificDateSerializer(serializers.ModelSerializer):
                 gs.TOO_MANY_SUPERVISROS)
 
         if data['start_time'] >= data['end_time']:
-            raise serializers.ValidationError(gs.START_AFTER_END)
+            raise serializers.ValidationError(gs.START_AFTER_END_TIME)
 
         return super(SpecificDateSerializer, self).validate(data)
 
@@ -321,7 +321,7 @@ class CourseSerializer(serializers.ModelSerializer):
         :return:
         """
         if data['start_time'] >= data['end_time']:
-            raise serializers.ValidationError(gs.START_AFTER_END)
+            raise serializers.ValidationError(gs.START_AFTER_END_TIME)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

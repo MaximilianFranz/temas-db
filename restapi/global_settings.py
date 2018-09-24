@@ -25,6 +25,7 @@ DATE_NOT_ON_WEEKDAY = 'Date is not on the weekday of this course'
 TOO_MANY_SUPERVISROS = 'Only one supervisor per Free-Training is allowed'
 
 START_AFTER_END = 'Start Date cannot be after the End Date for a subscription'
+START_AFTER_END_TIME = 'Start Time cannot be after the End Time'
 
 # ----------------------------------
 # Meaningful Default Model Variables
