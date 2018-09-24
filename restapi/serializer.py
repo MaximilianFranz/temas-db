@@ -323,6 +323,8 @@ class CourseSerializer(serializers.ModelSerializer):
         if data['start_time'] >= data['end_time']:
             raise serializers.ValidationError(gs.START_AFTER_END_TIME)
 
+        return super(CourseSerializer, self).validate(data)
+
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
