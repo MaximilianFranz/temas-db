@@ -103,7 +103,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
 
 class SpecificDateSerializer(serializers.ModelSerializer):
-    attendees = serializers.SerializerMethodField()
+    attendees = serializers.SerializerMethodField(read_only=True)
     date = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
 
     class Meta:
@@ -170,6 +170,9 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         if len(data['supervisor']) > 1 and data['course'].eventtype is 1:
             raise serializers.ValidationError(
                 gs.TOO_MANY_SUPERVISROS)
+
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError(gs.START_AFTER_END)
 
         return super(SpecificDateSerializer, self).validate(data)
 
@@ -309,6 +312,16 @@ class CourseSerializer(serializers.ModelSerializer):
         members = obj.get_members()
         serializer = MemberSerializer(members, many=True)
         return serializer.data
+
+    def validate(self, data):
+        """
+        Validates that start_time is before end_time
+
+        :param data:
+        :return:
+        """
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError(gs.START_AFTER_END)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
