@@ -25,14 +25,17 @@ def create_and_subscribe_member(row, course_name):
                           phone=row['Telefon'],
                           mail=row['E-Mail'],
                           guardian=row['Erziehungsberechtigter'],
-                          picked_up=make_boolean(row['Wird abgeholt?'])
+                          picked_up=make_boolean(row['Wird Abgeholt? '])
                           )
     course = Course.objects.get(name=course_name)
-    subscription = Subscription.objects.get_or_create(member=member,
-                                                      course=course,
-                                                      start_date=datetime.date(year=2018, month=10, day=1),
-                                                      value=20
-                                                      )
+    if Subscription.objects.get(member=member[0]) is None:
+
+        subscription = Subscription(member=member[0],
+                                    course=course,
+                                    start_date=datetime.date(year=2018, month=10, day=1),
+                                    value=20)
+        subscription.save()
+
 
 
 def parse_birthday(excel_string):
@@ -78,7 +81,7 @@ if __name__ == "__main__":
     for index, row in df.iterrows():
         if not pd.isnull(row['Vorname']) and not pd.isnull(row['Nachname']):
             # only if legitimate member data is in row
-            create_and_subscribe_member(row, 'PK-Montag-12-14')
+            create_and_subscribe_member(row, 'Montag - Kinderkurs')
             print('done ', index)
 
 
