@@ -41,6 +41,10 @@ class Member(models.Model):
     birthday = models.DateField(default=datetime.date.today)
     mail = models.EmailField(default="")
     phone = models.CharField(max_length=20)
+    picked_up = models.BooleanField(default=False, help_text="Whether this member is picked up by his parents")
+    guardian = models.CharField(max_length=20,
+                                default="",
+                                help_text="Legal Guardian of the member if under 18")
     mailNotification = models.BooleanField(default=False,
                                            help_text="Whether this user wants to"
                                                      "receive mail "

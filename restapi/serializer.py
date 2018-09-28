@@ -84,6 +84,8 @@ class MemberSerializer(serializers.ModelSerializer):
                   'mail',
                   'phone',
                   'birthday',
+                  'picked_up',
+                  'guardian',
                   'mailNotification',
                   'id_card',
                   # FK related fields
@@ -94,6 +96,8 @@ class MemberSerializer(serializers.ModelSerializer):
                   'percentage_attended',
                   'last_payment_date',
                   'attended_last_4_dates')
+
+        read_only_fields = ('guardian', 'picked_up')
 
     def get_payments(self, instance):
         payments = instance.payments.all().order_by('-date')
