@@ -40,8 +40,10 @@ class MemberDetail(generics.RetrieveUpdateDestroyAPIView):
 class SpecificDateList(generics.ListCreateAPIView):
     queryset = SpecificDate.objects.all()
     serializer_class = SpecificDateSerializer
-    filter_backends = (filters.SearchFilter, )
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     search_fields = ('date', 'course__name', 'course__id')
+    ordering_fields = ('date', 'course__name')
+    ordering = '-date'
 
 
 class SpecificDateDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -207,7 +209,7 @@ class CourseDatesList(APIView):
         :param format: format of the request
         :return:
         """
-        dates = SpecificDate.objects.all().filter(course=course_pk)
+        dates = SpecificDate.objects.all().filter(course=course_pk).order_by('-date')
         serializer = SpecificDateSerializer(dates, many=True)
         return Response(serializer.data)
 
