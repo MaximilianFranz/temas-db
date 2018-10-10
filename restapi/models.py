@@ -529,7 +529,7 @@ class SpecificDate(models.Model):
             # auto-generate attendance for Courses that are not 'free-training'
             for sub in active_course_subcriptions:
                 # for each subscription generate attendance
-                Attendance.objects.get_or_create(status=0,
+                Attendance.objects.get_or_create(
                                           member=sub.member,
                                           date=self)
 
