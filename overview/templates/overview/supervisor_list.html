@@ -1,0 +1,39 @@
+{% extends "overview/base.html" %}
+
+
+  {% block content %}
+
+  <h1>All Supervisors</h1>
+  <div class="table-responsive">
+      {% block table %}
+
+
+    <table class="table table-striped" >
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Birthday</th>
+        <th>Wage</th>
+        <th>Secondary Wage</th>
+        <th>Amount Due</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for supervisor in supervisors %}
+      <tr >
+        <td>{{supervisor.id}}</td>
+        <td><a href="{% url 'supervisor-detail-overview' supervisor.id %}" >{{ supervisor.first_name }} {{supervisor.last_name}}</a></td>
+        <td>{{supervisor.birthday}}</td>
+        <td>{{supervisor.wage}}</td>
+        <td>{{supervisor.secondary_wage}}</td>
+        <td>{{supervisor.amount_due}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endblock %}
+
+  </div>
+  {% endblock %}
+

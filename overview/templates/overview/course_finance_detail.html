@@ -3,55 +3,98 @@
 
   {% block content %}
 
-  <h2>Course Finance Detail : {{ course.name }} : {{ course.balance }}€</h2>
+  <h2>{{ course.name }} : {{ course.balance }}€</h2>
   <div class="container">
-
     <h3>Supervisors</h3>
-    <div class="row">
     {% for supervisor in course.supervisor.all %}
-    <div class="col-md">
-      <h4>{{ supervisor.first_name }} {{ supervisor.last_name }} : Amount due: {{ supervisor.amount_due }}€</h4>
-      <ul class="list-group">
-      {% for sup_payment in supervisor.get_last_payments %}
-        <li class="list-group-item">{{sup_payment.date}} {{sup_payment.value}}</li>
-      {% endfor %}
+    <div class="card">
+      <div class="card-header primary">
+        <b>{{ supervisor.first_name }} {{ supervisor.last_name }} </b> Amount due: {{ supervisor.amount_due }}€
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+        {% for sup_payment in supervisor.get_last_payments %}
+        <li class="list-group-item">{{sup_payment.date}} : {{sup_payment.value}}</li>
+        {% endfor %}
       </ul>
+      </div>
     </div>
     {% endfor %}
-  </div>
     <hr/>
-    <h3>Members</h3>
-    {% for member in course.get_members %}
-      <p>{{member.first_name}} {{member.last_name}} : {{member.balance}}€</p>
-      {% if member.get_last_payments|length is not 0 %}
-      <table class="table table-striped" >
-      <thead>
-      <tr>
-        <th>Date</th>
-        {% for payment in member.get_last_payments %}
-        <th>{{ payment.date }}</th>
-        {% endfor %}
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td>Value</td>
-        {% for payment in member.get_last_payments %}
-          {% if payment.course.name == course.name %}
-          <td>{{payment.value}}</td>
-          {% else %}
-          <td>N</td>
-          {% endif %}
 
-        {% endfor %}
-      </tr>
-      </tbody>
-    </table>
-    {% else %}
-    <p>No payments made yet</p>
-    {% endif %}
-    {% endfor %}
+    <!--MEMBER AREA-->
+
+    <h3>Members</h3>
+    <div class="accordion">
+      {% for member in course.get_members %}
+        <div class="card">
+          <div class="card-header">
+            <button class="btn btn-link " data-toggle="collapse" data-target="#collapse{{ member.id }}" aria-expanded="true" aria-controls="collapse{{ member.id }}">
+            {{member.first_name}} {{member.last_name}} : {{member.balance}}€
+            </button>
+          </div>
+          <div id="collapse{{ member.id }}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+          <div class="card-body">
+            <ul class="list-group">
+
+            {% for payment in member.get_last_payments %}
+                <li class="list-group-item">{{ payment.date }} {{payment.value}}€</li>
+            {% endfor %}
+
+            </ul>
+          </div>
+          </div>
+    </div>
+      {% endfor %}
+    </div>
   </div>
+  <hr/>
+  <h3>Calculations</h3>
+      <div class="card">
+      <div class="card-header primary">
+        <button class="btn btn-link " data-toggle="collapse" data-target="#collapseExpenses" aria-expanded="true" aria-controls="collapseExpenses">
+            <h4>Expenses</h4>
+        </button>
+
+      </div>
+        <div id="collapseExpenses" class="collapse" aria-labelledby="headingOne">
+      <div class="card-body">
+        <ul class="list-group">
+        {% for past_date in course.get_past_dates %}
+          <li class="list-group-item">{{past_date.date}} - {{past_date.time_in_hours}} - {{past_date.get_supervisor_names}} - <b>{{past_date.get_wage_payed}}</b> </li>
+        {% endfor %}
+      </ul>
+      </div>
+        </div>
+    </div>
+    <div class="card text-white">
+      <div class="card-header bg-danger">
+        <b class="float-right">Sum: {{course.total_money_spent}} € </b>
+      </div>
+    </div>
+      <div class="card">
+      <div class="card-header primary">
+        <button class="btn btn-link " data-toggle="collapse" data-target="#collapsePayment" aria-expanded="true" aria-controls="collapsePayment">
+            <h4>Payments</h4>
+        </button>
+
+      </div>
+        <div id="collapsePayment" class="collapse" aria-labelledby="headingOne">
+      <div class="card-body">
+        <ul class="list-group">
+        {% for payment in course.get_payments %}
+        <li class="list-group-item">{{payment.date}} - {{payment.member.first_name}} {{payment.member.last_name}} - {{payment.value}} €</li>
+        {% endfor %}
+      </ul>
+      </div>
+        </div>
+    </div>
+        <div class="card border-success text-white">
+      <div class="card-header bg-success">
+        <b class="float-right">Sum: {{course.total_money_earned}} € </b>
+      </div>
+    </div>
+
 
 {% endblock %}
 

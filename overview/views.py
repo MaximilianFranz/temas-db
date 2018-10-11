@@ -47,3 +47,26 @@ def course_finance_detail(request, course_id):
     }
     return HttpResponse(template.render(context, request))
 
+
+@login_required
+def supervisor_list(request):
+    supervisors = SupervisorProfile.objects.all()
+    template = loader.get_template('overview/supervisor_list.html')
+    context = {
+        'supervisors' : supervisors
+    }
+    return HttpResponse(template.render(context, request))
+
+@login_required
+def supervisor_detail(request, supervisor_id):
+    supervisor = SupervisorProfile.objects.get(pk=supervisor_id)
+    dates = []
+    for date in supervisor.supervised_dates.all():
+        dates.append({'model': date, 'payed': round(date.time_in_hours * supervisor.wage, 2)})
+
+    template = loader.get_template('overview/supervisor_detail.html')
+    context = {
+        'supervisor' : supervisor,
+        'dates' : dates
+    }
+    return HttpResponse(template.render(context, request))
