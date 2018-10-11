@@ -236,12 +236,11 @@ class SupervisorProfile(models.Model):
             return datetime.date.min
 
     @property
-    def amount_due(self):
+    def total_amount_earned(self):
         """
-        Calculates the amount of money this supervisor has to receive
-        considering the amount_due on course wages and the payments already made
-
-        :return: amount to be payed since last payment to this supervisor
+        Calculates the amount this supervisor earned through giving courses
+        and extra hours logged
+        :return: amount this supervisor has earned
         """
         # query time spent on courses
         primary_time_in_hours = self.supervised_dates.all().filter(
@@ -278,7 +277,18 @@ class SupervisorProfile(models.Model):
             extra_hours_amount = 0
 
         total_amount_due += extra_hours_amount
-        return round(total_amount_due - self.total_amount_payed, 2)
+        return total_amount_due
+
+
+    @property
+    def amount_due(self):
+        """
+        Calculates the amount of money this supervisor has to receive
+        considering the amount_due on course wages and the payments already made
+
+        :return: amount to be payed since last payment to this supervisor
+        """
+        return round(self.total_amount_earned - self.total_amount_payed, 2)
 
     @property
     def total_amount_payed(self):
@@ -296,12 +306,17 @@ class SupervisorProfile(models.Model):
 
         return round(amount_payed, 2)
 
-
     def get_last_payments(self):
         """
         :return: last four payments to this supervisor
         """
         return self.payments.all().order_by('-date')[:4]
+
+    def get_all_payments(self):
+        """
+        :return: all payments to this supervisor ordered by date
+        """
+        return self.payments.all().order_by('-date')
 
 
 class Course(models.Model):
@@ -431,6 +446,18 @@ class Course(models.Model):
 
         return Member.objects.filter(subscriptions__in=active_subscriptions)\
             .order_by('last_name')
+
+    def get_payments(self):
+        """
+        :return: all Payments made to this course by members, ordered by date
+        """
+        return self.payments.all().order_by('-date')
+
+    def get_past_dates(self):
+        """
+        :return: all past dates of this course
+        """
+        return self.dates.all().filter(date__lte=datetime.date.today())
 
     def save(self, *args, **kwargs):
         """
@@ -572,6 +599,29 @@ class SpecificDate(models.Model):
                     attendance.delete()
 
         return self.attendance_set.all()
+
+    def get_supervisor_names(self):
+        """
+        :return: Name and Wage info of supervisors
+        """
+        string = ''
+        for sup in self.supervisor.all():
+            string += sup.first_name + ' ' + sup.last_name + ' ('
+            if self.course.eventtype == 1:
+                string += str(sup.secondary_wage) + ') '
+            else:
+                string += str(sup.wage) + ') '
+
+        return string
+
+    def get_wage_payed(self):
+        """
+        :return: the waged payed to the supervisors
+        """
+        total = 0;
+        for sup in self.supervisor.all():
+            total += sup.wage * self.time_in_hours
+        return round(total, 2)
 
 
 
@@ -763,3 +813,6 @@ class ExtraHours(models.Model):
 
         super(ExtraHours, self).save()
 
+    @property
+    def total(self):
+        return round(self.time_in_hours * self.wage_to_pay, 2)
