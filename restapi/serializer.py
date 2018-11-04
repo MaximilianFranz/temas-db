@@ -71,7 +71,7 @@ class SupervisorField(serializers.PrimaryKeyRelatedField):
 
 
 class MemberSerializer(serializers.ModelSerializer):
-    birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS)
+    birthday = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS, required=False)
     payments = serializers.SerializerMethodField()
 
     class Meta:
@@ -98,6 +98,13 @@ class MemberSerializer(serializers.ModelSerializer):
                   'attended_last_4_dates')
 
         read_only_fields = ('guardian', 'picked_up')
+        extra_kwargs = {
+            'phone': {'required': False},
+            'mail': {'required': False},
+            'birthday': {'required': False},
+            'address': {'required': False},
+        }
+
 
     def get_payments(self, instance):
         payments = instance.payments.all().order_by('-date')

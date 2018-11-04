@@ -37,10 +37,10 @@ class Member(models.Model):
     created = models.DateField(auto_now_add=True, help_text="Date created")
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    address = models.CharField(max_length=400)
+    address = models.CharField(max_length=400, default="")
     birthday = models.DateField(default=datetime.date.today)
     mail = models.EmailField(default="")
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, default="0")
     picked_up = models.BooleanField(default=False, help_text="Whether this member is picked up by his parents")
     guardian = models.CharField(max_length=20,
                                 default="",
