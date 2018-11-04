@@ -279,6 +279,29 @@ class SupervisorProfile(models.Model):
         total_amount_due += extra_hours_amount
         return total_amount_due
 
+    def total_amount_earned_in_range(self, from_date, to_date):
+        """
+        Alternative Approach to above to calculate the amount of money earned
+        by this supervisor. Only considering the specified range
+        :param date_from:
+        :param date_to:
+        :return:
+        """
+        dates_in_range = self.get_supervised_dates_in_range(from_date, to_date)
+        total = 0
+        for date in dates_in_range:
+            if (date.course.eventtype == 1):
+                total += date.time_in_hours * self.secondary_wage
+            else:
+                total += date.time_in_hours * self.wage
+
+        extra_logs_in_range = self.get_extra_logs_in_range(from_date, to_date)
+        for log in extra_logs_in_range:
+            total += log.value
+
+        return total
+
+
 
     @property
     def amount_due(self):
@@ -306,6 +329,21 @@ class SupervisorProfile(models.Model):
 
         return round(amount_payed, 2)
 
+    def total_amount_payed_in_range(self, from_date, to_date):
+        """
+        :param from_date:
+        :param to_date:
+        :return: The amount payed in the selected range
+        """
+        amount_payed = self.get_payments_in_range(from_date, to_date)\
+            .aggregate(total_amount=models.Sum('value')).get('total_amount')
+
+        if amount_payed is None:
+            amount_payed = 0
+
+        return round(amount_payed, 2)
+
+
     def get_last_payments(self):
         """
         :return: last four payments to this supervisor
@@ -317,6 +355,39 @@ class SupervisorProfile(models.Model):
         :return: all payments to this supervisor ordered by date
         """
         return self.payments.all().order_by('-date')
+
+    def get_payments_in_range(self, from_date, to_date):
+        """
+        :param from_date: Start Date of the interval
+        :param to_date: End date of the interval
+        :return: all payments in the selected interval
+        """
+        if to_date is None:
+            to_date = datetime.date.today()
+
+        return self.payments.all().filter(date__lte=to_date)\
+            .filter(date__gte=from_date).order_by('-date')
+
+    def get_supervised_dates_in_range(self, from_date, to_date):
+        """
+        :param from_date: Start date of the interval
+        :param to_date: End date of the interval
+        :return: all dates supervised in this range by this supervisor
+        """
+        if to_date is None:
+            to_date = datetime.date.today()
+
+        return self.supervised_dates.all().filter(date__lte=to_date)\
+            .filter(date__gte=from_date).order_by('-date')
+
+    def get_extra_logs_in_range(self, from_date, to_date):
+        """
+        :param from_date: Start date of the interval
+        :param to_date: End date of the interval
+        :return: all extra logs in the specified range
+        """
+        return self.extra_hours.all().filter(date__lte=to_date)\
+            .filter(date__gte=from_date).order_by('-date')
 
 
 class Course(models.Model):
@@ -380,6 +451,16 @@ class Course(models.Model):
 
         return round(total_value, 2)
 
+    def total_money_earned_in_range(self, from_date, to_date):
+
+        total = self.get_payments_in_range(from_date, to_date)\
+            .aggregate(total_value=models.Sum('value')).get('total_value')
+
+        if total is None:
+            total = 0
+
+        return round(total, 2)
+
     @property
     def total_money_spent(self):
         """Return total money spend on supervisor wages"""
@@ -388,6 +469,17 @@ class Course(models.Model):
 
         # TODO: Replace this with an optimized query expression?
         for date in all_past_dates:
+            for sup in date.supervisor.all():
+                total += date.time_in_hours * sup.wage
+
+        return round(total, 2)
+
+    def total_money_spent_in_range(self, from_date, to_date):
+        total = 0
+        dates = self.get_dates_in_range(from_date, to_date)
+
+        # TODO: Replace this with an optimized query expression?
+        for date in dates:
             for sup in date.supervisor.all():
                 total += date.time_in_hours * sup.wage
 
@@ -453,11 +545,35 @@ class Course(models.Model):
         """
         return self.payments.all().order_by('-date')
 
+    def get_payments_in_range(self, from_date, to_date):
+        """
+        :param from_date:
+        :param to_date:
+        :return: all payments in the specified range
+        """
+        if to_date is None:
+            to_date = datetime.date.today()
+
+        return self.payments.all().filter(date__gte=from_date)\
+            .filter(date__lte=to_date).order_by('-date')
+
     def get_past_dates(self):
         """
         :return: all past dates of this course
         """
         return self.dates.all().filter(date__lte=datetime.date.today())
+
+    def get_dates_in_range(self, from_date, to_date):
+        """
+        :param from_date:
+        :param to_date:
+        :return: all dates in the specified range
+        """
+        if to_date is None:
+            to_date = datetime.date.today()
+
+        return self.dates.all().filter(date__gte=from_date)\
+            .filter(date__lte=to_date).order_by('-date')
 
     def save(self, *args, **kwargs):
         """
@@ -796,13 +912,20 @@ class ExtraHours(models.Model):
                                                 'used',
                                       null=True, blank=True)
 
+    @property
+    def value(self):
+        """
+        :return: Total Value of this extra log
+        """
+        return self.time_in_hours * self.wage_to_pay
+
     note = models.TextField(help_text='Note on the reason or '
                                       'content of the extra work',
                             null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """Overwrite save() to set time_in_hours and default wage if
-        necessary
+        necessary. Also set the value
         """
         self.time_in_hours = Decimal(self.end_time.hour - self.start_time.hour + \
                                          (self.end_time.minute - self.start_time.minute) / 60)
@@ -811,6 +934,7 @@ class ExtraHours(models.Model):
             # use default wage if not explicitly set
             self.wage_to_pay = self.supervisor.wage
 
+        self.value = self.time_in_hours * self.wage_to_pay
         super(ExtraHours, self).save()
 
     @property
