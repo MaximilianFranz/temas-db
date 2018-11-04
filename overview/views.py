@@ -110,7 +110,12 @@ def supervisor_detail(request, supervisor_id):
 
     view_dates = []
     for date in dates:
-        view_dates.append({'model': date, 'payed': round(date.time_in_hours * supervisor.wage, 2)})
+        if date.eventtype is 1:
+            wage = supervisor.secondary_wage
+        else:
+            wage = supervisor.wage
+
+        view_dates.append({'model': date, 'payed': round(date.time_in_hours * wage, 2)})
 
     template = loader.get_template('overview/supervisor_detail.html')
     context = {
