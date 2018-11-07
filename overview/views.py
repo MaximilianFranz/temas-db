@@ -9,7 +9,10 @@ from .models import *
 from datetime import datetime
 
 def admin_test(user):
-    return user.supervisor_profile.is_admin
+    if user.is_staff:
+        return True
+    else:
+        return user.supervisor_profile.is_admin
 
 DATE_FORMAT = '%Y-%m-%d'
 
@@ -110,7 +113,7 @@ def supervisor_detail(request, supervisor_id):
 
     view_dates = []
     for date in dates:
-        if date.eventtype is 1:
+        if date.course.eventtype is 1:
             wage = supervisor.secondary_wage
         else:
             wage = supervisor.wage
