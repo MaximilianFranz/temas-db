@@ -492,12 +492,16 @@ class SupervisorPaymentSerializer(serializers.ModelSerializer):
 
 class WaitingDetailsSerializer(serializers.ModelSerializer):
     member = MemberField(queryset=Member.objects.all())
+    waiting_since = serializers.DateField(input_formats=gs.DATE_INPUT_FORMATS, required=False)
 
     class Meta:
         depth = 0
         model = WaitingDetails
         fields = ('id', 'member', 'course', 'waiting_since', 'note')
 
+        extra_kwargs = {
+            'note': {'required': False},
+        }
 
 class ExtraHoursSerializer(serializers.ModelSerializer):
     class Meta:
