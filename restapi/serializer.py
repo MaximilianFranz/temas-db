@@ -428,21 +428,16 @@ class SubscriptionSingleSerializer(serializers.ModelSerializer):
         def validate(self, data):
             """
             Validates that:
-             1. Course is not full yet
-                if it is, a waiting-list entry is automatically created
-             2. Start date is before end date
-             3. No conflicting subscription exists
+             1. Start date is before end date
+             2. No conflicting subscription exists
+
+             No check for full course, since this conflicts with edits of subcriptions.
+             TODO: The case that someone changes a subscription from one course to another is not covered and
+             thus it is possible to add more members than max_attendees.
+
             :param data: to be validated
             :return: validated data
             """
-            # note that number_of_participants refers to the number,
-            # before this one is added thus use greater or equal
-            if data['course'].number_of_participants >= data[
-                'course'].max_attendees:
-                WaitingDetails.objects.create(member=data['member'],
-                                              course=data['course'],
-                                              note=gs.AUTO_ADD_WAITINGLIST_NOTE)
-                raise serializers.ValidationError(gs.COURSE_FULL)
 
             # Check that start Date is before end date
             if 'end_date' in data and data['end_date'] is not None:
