@@ -38,6 +38,7 @@ urlpatterns = [
 
     url(r'^coursedates/(?P<course_pk>[0-9]+)/$', views.CourseDatesList.as_view(), name='coursedates'),
     url(r'^get_sub/(?P<member_pk>[0-9]+)/(?P<course_pk>[0-9]+)/$', views.UnsubscribeMember.as_view(), name='unsubscribe'),
+    url(r'^excuse_member/$', views.excuse_member, name='excuse-member'),
 
 
 

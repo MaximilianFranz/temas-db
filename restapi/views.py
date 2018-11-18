@@ -10,10 +10,15 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes, \
                                         authentication_classes
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser
 from rest_framework.authtoken import views as rest_framework_views
 
 from restapi.serializer import *
+from . import global_settings as gs
+from .utils import *
 
+import datetime
+from datetime import timedelta
 
 class MemberList(generics.ListCreateAPIView):
     """
@@ -285,3 +290,44 @@ def auth_view(request, format=None):
     :return:
     """
     return rest_framework_views.obtain_auth_token
+
+
+@api_view(['POST'])
+def excuse_member(request):
+    """
+    POST endpoint to excuse member
+    Takes argument from POST:
+     - date_from : start of the interval
+     - date_to : end of the interval
+     - member_id : member to excuse
+     - note : note to add
+
+    :param request: the request object
+    :return: Pseudo Response
+    """
+
+    data = JSONParser().parse(request)
+    date_from = data['date_from']
+    date_to = data['date_to']
+    member_pk = data['member_id']
+    if 'note' in data:
+        note = data['note']
+
+    member = Member.objects.get(pk=member_pk)
+    # Parse Dates to python format
+    date_from = datetime.datetime.strptime(date_from, gs.REST_DATE_FORMAT)
+    date_to = datetime.datetime.strptime(date_to, gs.REST_DATE_FORMAT)
+
+    # Find possible course-dates in range and pre-register the specificDate
+    course_date_helper(member, date_from, date_to)
+
+    # date is the specificDate of which we in turn want to query the date.
+    attendance_in_range = member.attendance_set.filter(date__date__range=(date_from, date_to))
+
+    for attendance in attendance_in_range:
+        attendance.status = 1
+        attendance.note = note
+        attendance.save()
+
+    return Response('Sucess!')
+

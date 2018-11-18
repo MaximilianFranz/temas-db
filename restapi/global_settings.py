@@ -76,3 +76,4 @@ DATE_INPUT_FORMATS = ['%Y-%m-%d',
                       '%d-%m-%Y %H:%M',
                       '%Y-%m', '%m-%Y']
 
+REST_DATE_FORMAT = '%Y-%m-%d'
