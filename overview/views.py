@@ -18,10 +18,31 @@ DATE_FORMAT = '%Y-%m-%d'
 
 @login_required
 def course_list(request):
+    total_spent = 0
+    total_earned = 0
     course_list = Course.objects.all()
+
+    if request.method == 'POST':
+        if request.POST.get('dateFrom') is '':
+            from_date = datetime.min
+            to_date = datetime.max
+        else:
+            from_date = datetime.strptime(request.POST.get('dateFrom'), DATE_FORMAT)
+            to_date = datetime.strptime(request.POST.get('dateTo'), DATE_FORMAT)
+
+        for course in course_list:
+            total_earned += course.total_money_earned_in_range(from_date, to_date)
+            total_spent -= course.total_money_spent_in_range(from_date, to_date)
+    else:
+        for course in course_list:
+            total_earned += course.total_money_earned
+            total_spent -= course.total_money_spent
+
     template = loader.get_template('overview/course_list.html')
     context = {
-        'course_list' : course_list
+        'course_list': course_list,
+        'total_earned': total_earned,
+        'total_spent': total_spent
     }
     return HttpResponse(template.render(context, request))
 
