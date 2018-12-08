@@ -100,6 +100,7 @@ class MemberSerializer(serializers.ModelSerializer):
         read_only_fields = ('guardian', 'picked_up')
         extra_kwargs = {
             'phone': {'required': False},
+            'guardian': {'required': False},
             'mail': {'required': False},
             'birthday': {'required': False},
             'address': {'required': False},
