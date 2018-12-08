@@ -50,16 +50,29 @@ def course_list(request):
 @user_passes_test(admin_test)
 def course_detail(request, course_id):
     course = Course.objects.get(pk=course_id)
-    template = loader.get_template('overview/course_detail.html')
-    last_12_dates = course.get_last_dates(12)
-    for date in last_12_dates:
+
+    if request.method == 'POST':
+        if request.POST.get('dateFrom') is '' or request.POST.get('dateTo') is '':
+            dates = course.get_last_dates(12)
+        else:
+            from_date = datetime.strptime(request.POST.get('dateFrom'), DATE_FORMAT)
+            to_date = datetime.strptime(request.POST.get('dateTo'), DATE_FORMAT)
+            dates = course.get_dates_in_range(from_date, to_date)
+
+    else:
+        dates = course.get_last_dates(12)
+
+    # Create Attendance information on date
+    for date in dates:
+        # members are ordered by last_name,
         date.member_attendance = date.attendance_set.all().order_by('member__last_name')
 
     context = {
         'course' : course,
-        'last_dates' : last_12_dates,
+        'last_dates' : dates,
 
     }
+    template = loader.get_template('overview/course_detail.html')
     return HttpResponse(template.render(context, request))
 
 

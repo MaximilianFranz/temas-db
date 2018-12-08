@@ -9,7 +9,21 @@
   </div>
   <hr>
   <div>
-    <h2>Attendance</h2>
+    <div class="row">
+      <div class="col">
+        <h2>Attendance</h2>
+      </div>
+      <div class="col">
+        <form class="form-inline" action="{% url 'course-detail-overview' course.id %}" method="post">
+          {% csrf_token %}
+          <label class="form-label sr-only" for="fromDate">From</label>
+          <input id="fromDate" class="form-control mr-2" type="date" name="dateFrom" placeholder="jjjj-mm-dd">
+          <label class="form-label sr-only" for="toDate">To</label>
+          <input id= "toDate" class="form-control mr-2" type="date" name="dateTo" placeholder="jjjj-mm-dd">
+          <button type="submit" class="btn btn-primary my-1">Apply</button>
+        </form>
+      </div>
+    </div>
   </div>
   <div class="table-responsive">
     <table class="table table-striped rtable--flip" >
@@ -28,13 +42,13 @@
         {% for attendance in date.member_attendance%}
         {% if attendance.member in course.get_members %}
         {% if attendance.status is 2 %}
-          <td>x</td>
+          <td>√</td>
         {% elif attendance.status is 1 %}
           <td>e</td>
         {% elif attendance.status is 3 %}
           <td>-</td>
         {% else %}
-          <td>0</td>
+          <td></td>
         {% endif %}
         {% endif %}
         {% endfor %}
