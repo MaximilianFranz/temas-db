@@ -912,6 +912,10 @@ class ExtraHours(models.Model):
                                                 'used',
                                       null=True, blank=True)
 
+    note = models.TextField(help_text='Note on the reason or '
+                                      'content of the extra work',
+                            null=True, blank=True)
+
     @property
     def value(self):
         """
@@ -919,9 +923,9 @@ class ExtraHours(models.Model):
         """
         return self.time_in_hours * self.wage_to_pay
 
-    note = models.TextField(help_text='Note on the reason or '
-                                      'content of the extra work',
-                            null=True, blank=True)
+    @property
+    def total(self):
+        return round(self.time_in_hours * self.wage_to_pay, 2)
 
     def save(self, *args, **kwargs):
         """Overwrite save() to set time_in_hours and default wage if
@@ -934,9 +938,5 @@ class ExtraHours(models.Model):
             # use default wage if not explicitly set
             self.wage_to_pay = self.supervisor.wage
 
-        self.value = self.time_in_hours * self.wage_to_pay
         super(ExtraHours, self).save()
 
-    @property
-    def total(self):
-        return round(self.time_in_hours * self.wage_to_pay, 2)
