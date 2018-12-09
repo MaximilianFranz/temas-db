@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes, \
                                         authentication_classes
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 from rest_framework.parsers import JSONParser
 from rest_framework.authtoken import views as rest_framework_views
 
@@ -331,3 +332,30 @@ def excuse_member(request):
 
     return Response('Sucess!')
 
+
+@api_view(['GET'])
+def get_next_date(request, supervisor_pk):
+    supervisor = SupervisorProfile.objects.get(pk=supervisor_pk)
+    courses = supervisor.courses.all()
+
+    if len(courses) is 0:
+        return Response(data={'non_field_errors': ["No course for this supervisor"]},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    # Find next date considering all courses of supervisor
+    current_date = datetime.date.max
+    current_course = 0
+
+    for course in courses:
+        current_course = course
+        next_course_date = get_next_date_from_weekday(course.day_of_week)
+        if next_course_date < current_date:
+            current_date = next_course_date
+
+    if current_date == datetime.date.max:
+        return 0
+
+    # get_or_create returns a tuple, thus select only the first element
+    date_object = SpecificDate.objects.get_or_create(date=current_date, course=current_course)[0]
+    serializer = SpecificDateSerializer(date_object)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

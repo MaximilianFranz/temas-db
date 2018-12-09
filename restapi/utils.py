@@ -1,5 +1,5 @@
 from .models import SpecificDate
-from datetime import timedelta
+from datetime import timedelta, datetime, date
 
 
 def course_date_helper(member, date_from, date_to):
@@ -47,3 +47,21 @@ def get_dates_of_weekdays_in_range(weekday, date_from, date_to):
         new_date = new_date + timedelta(days=7)
 
     return dates
+
+
+def get_next_date_from_weekday(weekday):
+    """
+
+    :param weekday: int 0 - 6 for monday through sunday
+    :return: Next date on that weekday from today
+    """
+
+    today = date.today()
+
+    if today.weekday() == weekday:
+        return today
+    if today.weekday() < weekday:
+        return today + timedelta(days=(weekday - today.weekday()))
+    else:
+        return today + timedelta(days=((weekday - today.weekday()) % 6) + 1)
+

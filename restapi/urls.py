@@ -39,8 +39,7 @@ urlpatterns = [
     url(r'^coursedates/(?P<course_pk>[0-9]+)/$', views.CourseDatesList.as_view(), name='coursedates'),
     url(r'^get_sub/(?P<member_pk>[0-9]+)/(?P<course_pk>[0-9]+)/$', views.UnsubscribeMember.as_view(), name='unsubscribe'),
     url(r'^excuse_member/$', views.excuse_member, name='excuse-member'),
-
-
+    url(r'^get_next_date/(?P<supervisor_pk>[0-9]+)/$', views.get_next_date, name='get-next-date'),
 
     url(r'^get_auth/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     # url(r'^get_auth/$', views.auth_view, name='get_auth_token'),
