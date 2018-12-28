@@ -12,6 +12,6 @@ urlpatterns = [
     path('supervisors/', views.supervisor_list, name="supervisor-list-overview"),
     path('supervisor_detail/(?P<supervisor_id>[0-9]+)', views.supervisor_detail, name="supervisor-detail-overview"),
 
-    url(r'^login/$', auth_views.login, {'template_name': 'overview/login.html'}, name='login'),
-    url(r'^logout/$', auth_views.logout, name='logout')
+    url(r'^login/$', auth_views.LoginView, {'template_name': 'overview/login.html'}, name='login'),
+    url(r'^logout/$', auth_views.LogoutView, name='logout')
 ]
