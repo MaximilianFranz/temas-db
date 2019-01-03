@@ -36,6 +36,7 @@ course_1_data = {
     'day_of_week': 0,
     'supervisor': [1],
     'start_time': '15:00',
+    'end_time': '17:30',
     'department': 0,
     'max_attendees': 15
 }
@@ -79,7 +80,8 @@ specificdate_4_data = {
 
 # free training patch for 'too many supervisor'-error
 specificdate_4_patch = {
-    'supervisor': [1, 2]
+    'supervisor': [1, 2],
+    'course': 2
 }
 
 # Subscription from the past
