@@ -4,6 +4,7 @@ Order by time of creation.
 """
 
 from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -92,6 +93,10 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 class CourseList(generics.ListCreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend, )
+    filter_fields = ('eventtype', 'name', 'day_of_week', 'department')
+    search_fields = ('name', )
+
 
 
 class CourseDetail(generics.RetrieveUpdateDestroyAPIView):

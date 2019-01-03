@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'restapi.apps.RestapiConfig',
     'overview.apps.OverviewConfig',
     'raven.contrib.django.raven_compat',
+    'django_filters'
 ]
 
 MIDDLEWARE = [
@@ -67,6 +68,10 @@ RAVEN_CONFIG = {
     # If you are using git, you can also automatically configure the
     # release based on the git info.
     'release': raven.fetch_git_sha(os.path.abspath(BASE_DIR)),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 # Database
