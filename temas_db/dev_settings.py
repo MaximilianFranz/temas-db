@@ -21,7 +21,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message} in line {lineno} of {funcName} in {filename}',
             'style': '{',
         },
         'simple': {
@@ -47,7 +47,7 @@ LOGGING = {
             # Use console and sentry for all django base logging from WARNING
             # upwards by default or by querying ENV variable DJANGO_LOG_LEVEL
             # 'handlers': ['console'],
-            'handlers': ['console', 'sentry'],
+            'handlers': ['console',],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'),
         },
     },
