@@ -340,7 +340,67 @@ class AdvancedTestCase(APITestCase):
         response = self.client.patch(url, td.specificdate_4_patch)
         self.assertEqual(response.data['non_field_errors'], [gs.TOO_MANY_SUPERVISROS])
 
-        
 
 
+
+
+class FunctionalViewTestCase(APITestCase):
+
+    def setUp(self):
+        url = reverse('member-list')
+        self.client.post(url, data=td.member_1_data)
+        url = reverse('supervisor-list')
+        self.client.post(url, data=td.supervisor_1_data)
+        url = reverse('course-list')
+        self.client.post(url, data=td.course_1_data)
+        url = reverse('specificdate-list')
+        self.client.post(url, data=td.specificdate_2_data) # a valid monday date 30.07
+        self.client.post(url, data=td.specificdate_3_data) # a valid monday date 13.08
+        url = reverse('member-list')
+        self.client.post(url, data=td.member_1_data) # a member
+        url = reverse('subscription-list')
+        self.client.post(url, data=td.subscription_2_data) # a member
+
+
+    @freeze_time("2018-07-28")
+    def test_get_next_course_exisiting(self):
+        """
+        Does the get_next_date endpoint return the next course, when it exists?
+
+        """
+        url = reverse('get-next-date', kwargs={'supervisor_pk' : 1})
+        response = self.client.get(url)
+        self.assertEqual(response.data['date'], "2018-07-30") # returns exisiting date
+
+    @freeze_time("2018-08-04")
+    def test_get_next_course_new(self):
+        """
+        Does the get_next_date endpoint return the next course, when none exists?
+
+        """
+        url = reverse('get-next-date', kwargs={'supervisor_pk' : 1})
+        response = self.client.get(url)
+        self.assertEqual(response.data['date'], "2018-08-06") # returns new date
+
+
+    @freeze_time("2018-08-01")
+    def test_excuse_member(self):
+        """
+        Tests the excuse member endpoint
+
+        1. Is member excused on exisiting dates?
+        2. Is note delivered?
+        3. Are new dates in range created and member excused?
+        :return:
+        """
+        url = reverse("excuse-member")
+        response = self.client.post(url, data=td.excuse_data)
+        print('resp: ', response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check if member is was excused
+        url = reverse("specificdate-detail", kwargs={'pk' : 3})
+        response = self.client.get(url)
+        self.assertEqual(response.data['date'], "2018-08-06") # new date created in range
+        self.assertEqual(response.data['attendees'][0]['status'], 1) # excused status for attendance
 

@@ -175,15 +175,15 @@ class SpecificDateSerializer(serializers.ModelSerializer):
         """
         # only check for validity if course specifies a day
         # e.g. Free-training does not specify a day, thus all days are valid
-        if data['course'].day_of_week is not None:
+        if 'course' in data and data['course'].day_of_week is not None:
             if data['date'].weekday() != data['course'].day_of_week:
                 raise serializers.ValidationError(gs.DATE_NOT_ON_WEEKDAY)
 
-        if len(data['supervisor']) > 1 and data['course'].eventtype is 1:
+        if 'course' in data and len(data['supervisor']) > 1 and data['course'].eventtype is 1:
             raise serializers.ValidationError(
                 gs.TOO_MANY_SUPERVISROS)
 
-        if data['start_time'] >= data['end_time']:
+        if 'start_time' in data and data['start_time'] >= data['end_time']:
             raise serializers.ValidationError(gs.START_AFTER_END_TIME)
 
         return super(SpecificDateSerializer, self).validate(data)
@@ -332,8 +332,9 @@ class CourseSerializer(serializers.ModelSerializer):
         :param data:
         :return:
         """
-        if data['start_time'] >= data['end_time']:
-            raise serializers.ValidationError(gs.START_AFTER_END_TIME)
+        if 'start_time' in data and 'end_time' in data:
+            if data['start_time'] >= data['end_time']:
+                raise serializers.ValidationError(gs.START_AFTER_END_TIME)
 
         return super(CourseSerializer, self).validate(data)
 

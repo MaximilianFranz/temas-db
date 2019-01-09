@@ -153,3 +153,10 @@ payment_1_data = {
     'course' : 1,
     'value' : 40
 }
+
+excuse_data = {
+    'member_id' : 1,
+    'date_from' : "2018-08-01",
+    'date_to' : "2018-08-07",
+    'note' : "test"
+}

@@ -312,12 +312,12 @@ def excuse_member(request):
     :return: Pseudo Response
     """
 
-    data = JSONParser().parse(request)
+    data = request.data
+    # data = JSONParser().parse(request)
     date_from = data['date_from']
     date_to = data['date_to']
     member_pk = data['member_id']
-    if 'note' in data:
-        note = data['note']
+    note = data['note'] if 'note' in data else ''
 
     member = Member.objects.get(pk=member_pk)
     # Parse Dates to python format
