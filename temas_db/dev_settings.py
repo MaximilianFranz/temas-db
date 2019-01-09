@@ -21,7 +21,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message} in line {lineno} of {funcName} in {filename}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message} in line {lineno} of {funcName} in {filename} more: {stack_info}',
             'style': '{',
         },
         'simple': {
