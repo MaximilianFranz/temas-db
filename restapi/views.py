@@ -335,11 +335,21 @@ def excuse_member(request):
         attendance.note = note
         attendance.save()
 
-    return Response('Sucess!')
+    return Response('Success!', status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def get_next_date(request, supervisor_pk):
+    """
+    Returns the next specific date which the given supervisor is responsible for.
+
+    Searches the courses of the supervisor to then find the dates of these
+    courses in the future and returns the one which is closest.
+
+    :param request: request data
+    :param supervisor_pk: ID of the supervisor
+    :return: SpecificDate serialized data
+    """
     supervisor = SupervisorProfile.objects.get(pk=supervisor_pk)
     courses = supervisor.courses.all()
 
