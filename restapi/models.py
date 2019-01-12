@@ -72,8 +72,6 @@ class Member(models.Model):
         Returns the balance of this Member considering payments and
         subscriptions
 
-
-
         :return:
         """
         balance = self.payments.all().aggregate(payed=models.Sum('value')).get('payed')
@@ -714,7 +712,7 @@ class SpecificDate(models.Model):
                 if not active_subscriptions.exists():
                     attendance.delete()
 
-        return self.attendance_set.all()
+        return self.attendance_set.all().order_by('member__last_name')
 
     def get_supervisor_names(self):
         """
