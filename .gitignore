@@ -3,6 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+/static/
+secret.txt
+
+#ignore django local database
+db.sqlite3
+restapi/migrations
+
+#ignore PyCharm IDEA
+.idea/
+
 # C extensions
 *.so
 

@@ -1,0 +1,89 @@
+{% extends "overview/base.html" %}
+
+
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <h1 style="display: inline-block">{{ supervisor.first_name }} {{ supervisor.last_name }} - Total: {{supervisor.amount_due}}€</h1>
+    </div>
+    <div class="col">
+        <form class="form-inline" action="{% url 'supervisor-detail-overview' supervisor.id %}" method="post">
+            {% csrf_token %}
+            <label class="form-label sr-only" for="fromDate">From</label>
+            <input id="fromDate" class="form-control mr-2" type="date" name="dateFrom" placeholder="jjjj-mm-dd">
+            <label class="form-label sr-only" for="toDate">To</label>
+            <input id= "toDate" class="form-control mr-2" type="date" name="dateTo" placeholder="jjjj-mm-dd">
+            <button type="submit" class="btn btn-primary my-1">Apply</button>
+        </form>
+    </div>
+</div>
+<hr>
+<div>
+    <h2>Calculations</h2>
+</div>
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header primary">
+                <button class="btn btn-link " data-toggle="collapse" data-target="#collapseExpenses" aria-expanded="true" aria-controls="collapseExpenses">
+                    <b>Payed</b>
+                </button>
+
+            </div>
+            <div id="collapseExpenses" class="collapse" aria-labelledby="headingOne">
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for payment in payments %}
+                            <li class="list-group-item">
+                                <div>
+
+                                {{payment.date}} - {{payment.value}} €
+
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card text-white">
+            <div class="card-header bg-success">
+                <b class="float-right">Sum: {{ payment_sum }} € </b>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header primary">
+                <button class="btn btn-link " data-toggle="collapse" data-target="#collapseDates" aria-expanded="true" aria-controls="collapseDates">
+                    <b>Due</b>
+                </button>
+
+            </div>
+            <div id="collapseDates" class="collapse" aria-labelledby="headingOne">
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for date in dates%}
+                        <li class="list-group-item">{{date.model.date}} - {{date.model.time_in_hours}}h - <b> {{ date.payed }} €</b> </li>
+                        {% endfor %}
+                        {% for log in extra_hours %}
+                        <li class="list-group-item">ExtraLog: {{log.date}} - {{log.time_in_hours}} - <b> {{ log.total }}€</b> </li>
+                        {% endfor %}
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card text-white">
+            <div class="card-header bg-danger">
+                <b class="float-right">Sum: {{ sum_earned }} € </b>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+{% endblock %}

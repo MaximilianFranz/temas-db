@@ -1,0 +1,71 @@
+{% extends "overview/base.html" %}
+
+
+  {% block content %}
+<div class="row">
+    <h1>All Courses</h1>
+
+</div>
+  <div class="table-responsive">
+      {% block table %}
+
+
+    <table class="table table-striped" >
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th># of Participants</th>
+        <th>Maximum # of Participants</th>
+        <th>Balance</th>
+        <th>Size of Waiting List</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for course in course_list %}
+      <tr >
+        <td>{{course.id}}</td>
+        <td><a href="{% url 'course-detail-overview' course.id %}" >{{ course.name }}</a></td>
+        <td>{{course.start_time}}</td>
+        <td>{{course.end_time}}</td>
+        <td>{{course.number_of_participants}}</td>
+        <td>{{course.max_attendees}}</td>
+        <td>{{course.balance}}</td>
+        <td>{{course.size_of_waitinglist}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+    {% endblock %}
+
+<div class="row">
+    <div class="col">
+    <h2>Total Calculations</h2>
+    </div>
+    <div class="col">
+        <form class="form-inline" action="{% url 'course-list-overview' %}" method="post">
+          {% csrf_token %}
+          <label class="form-label sr-only" for="fromDate">From</label>
+          <input id="fromDate" class="form-control mr-2" type="date" name="dateFrom" placeholder="jjjj-mm-dd">
+          <label class="form-label sr-only" for="toDate">To</label>
+          <input id= "toDate" class="form-control mr-2" type="date" name="dateTo" placeholder="jjjj-mm-dd">
+          <button type="submit" class="btn btn-primary my-1">Apply</button>
+        </form>
+    </div>
+</div>
+    <div class="card" style="width: 18rem;">
+      <div class="card-header">
+        Of all courses
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">Total Earned: {{ total_earned }}€ </li>
+        <li class="list-group-item">Total Spent: {{ total_spent }}€ </li>
+          <li class="list-group-item">Total Balance: <b>{{ total_earned|add:total_spent }}€ </b></li>
+      </ul>
+    </div>
+  {% endblock %}
+
+

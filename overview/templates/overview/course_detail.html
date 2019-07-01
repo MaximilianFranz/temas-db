@@ -1,0 +1,64 @@
+{% extends "overview/base.html" %}
+
+
+  {% block content %}
+
+  <div >
+    <h1 style="display: inline-block">{{ course.name }}</h1>
+    <a href="{% url 'course-detail-finance-overview' course.id %}" class="btn btn-outline-primary float-right">Finance Overview</a>
+  </div>
+  <hr>
+  <div>
+    <div class="row">
+      <div class="col">
+        <h2>Attendance</h2>
+      </div>
+      <div class="col">
+        <form class="form-inline" action="{% url 'course-detail-overview' course.id %}" method="post">
+          {% csrf_token %}
+          <label class="form-label sr-only" for="fromDate">From</label>
+          <input id="fromDate" class="form-control mr-2" type="date" name="dateFrom" placeholder="jjjj-mm-dd">
+          <label class="form-label sr-only" for="toDate">To</label>
+          <input id= "toDate" class="form-control mr-2" type="date" name="dateTo" placeholder="jjjj-mm-dd">
+          <button type="submit" class="btn btn-primary my-1">Apply</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped rtable--flip" >
+      <thead>
+      <tr>
+        <th>Date</th>
+        {% for member in course.get_members %}
+        <th>{{ member.first_name }} {{ member.last_name }}</th>
+        {% endfor %}
+      </tr>
+      </thead>
+      <tbody>
+      {% for date in last_dates %}
+      <tr>
+        <td>{{date.date|date:"j.n.y" }}</td>
+        {% for attendance in date.member_attendance%}
+        {% if attendance.member in course.get_members %}
+        {% if attendance.status is 2 %}
+          <td>√</td>
+        {% elif attendance.status is 1 %}
+          <td>e</td>
+        {% elif attendance.status is 3 %}
+          <td>-</td>
+        {% else %}
+          <td></td>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+
+{% endblock %}
+
+
